@@ -34,7 +34,7 @@ async function setup() {
     .build();
 
   // Cargar la app base antes de escribir en localStorage
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Inyectar token de autenticación para evitar el flujo de login
   await driver.executeScript(`
@@ -64,7 +64,7 @@ async function teardown() {
  * @async
  */
 async function testCrearCliente() {
-  await driver.get("http://localhost:5173/cliente-form");
+  await driver.get("http://localhost:4173/cliente-form");
 
   // Esperar a que el formulario esté listo
   await driver.wait(
@@ -123,7 +123,7 @@ async function testCrearCliente() {
  * @async
  */
 async function testCrearClienteCamposVacios() {
-  await driver.get("http://localhost:5173/cliente-form");
+  await driver.get("http://localhost:4173/cliente-form");
 
   // Intentar guardar sin llenar nada
   await driver.findElement(By.css("[data-testid='cliente-guardar-btn']")).click();
@@ -146,7 +146,7 @@ async function testCrearClienteCamposVacios() {
  * @async
  */
 async function testListarCliente() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 5 corresponde a Clientes
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -166,7 +166,7 @@ async function testListarCliente() {
  * @async
  */
 async function testActualizarCliente() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[5].click();
@@ -203,7 +203,7 @@ async function testActualizarCliente() {
  * @async
  */
 async function testEliminarCliente() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[5].click();

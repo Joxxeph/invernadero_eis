@@ -34,7 +34,7 @@ async function setup() {
     .build();
 
   // Visitar la app antes de escribir en localStorage
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Persistir credenciales en el almacenamiento local del navegador
   await driver.executeScript(`
@@ -64,7 +64,7 @@ async function teardown() {
  * @async
  */
 async function testCrearCultivo() {
-  await driver.get("http://localhost:5173/cultivo-form");
+  await driver.get("http://localhost:4173/cultivo-form");
 
   // Esperar a que el primer campo esté disponible antes de interactuar
   await driver.wait(
@@ -139,7 +139,7 @@ async function testCrearCultivo() {
  * @async
  */
 async function testCrearCultivoCamposVacios() {
-  await driver.get("http://localhost:5173/cultivo-form");
+  await driver.get("http://localhost:4173/cultivo-form");
 
   // Pulsar guardar sin rellenar ningún campo
   await driver.findElement(By.css("[data-testid='cultivo-guardar-btn']")).click();
@@ -162,7 +162,7 @@ async function testCrearCultivoCamposVacios() {
  * @async
  */
 async function testListarCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 1 corresponde a Cultivos
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -182,7 +182,7 @@ async function testListarCultivo() {
  * @async
  */
 async function testActualizarCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[1].click();
@@ -218,7 +218,7 @@ async function testActualizarCultivo() {
  * @async
  */
 async function testEliminarCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[1].click();

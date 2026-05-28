@@ -35,7 +35,7 @@ async function setup() {
     .build();
 
   // Visitar la app antes de escribir en localStorage
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Inyectar token de sesión de administrador
   await driver.executeScript(`
@@ -65,7 +65,7 @@ async function teardown() {
  * @async
  */
 async function testCrearTipoCultivoVacio() {
-  await driver.get("http://localhost:5173/tipo-cultivo-form");
+  await driver.get("http://localhost:4173/tipo-cultivo-form");
 
   // Pulsar guardar sin rellenar nada
   await driver.findElement(By.css("[data-testid='tipocultivo-guardar-btn']")).click();
@@ -95,7 +95,7 @@ async function testCrearTipoCultivoVacio() {
  * @async
  */
 async function testCrearTipoCultivo() {
-  await driver.get("http://localhost:5173/tipo-cultivo-form");
+  await driver.get("http://localhost:4173/tipo-cultivo-form");
 
   // Esperar que el formulario esté disponible
   await driver.wait(
@@ -140,7 +140,7 @@ async function testCrearTipoCultivo() {
  * @async
  */
 async function testListarTipoCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Esperar a que los tabs existan antes de intentar hacer click
   await driver.wait(
@@ -170,7 +170,7 @@ async function testListarTipoCultivo() {
  * @async
  */
 async function testActualizarTipoCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[0].click();
@@ -206,7 +206,7 @@ async function testActualizarTipoCultivo() {
  * @async
  */
 async function testEliminarTipoCultivo() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[0].click();

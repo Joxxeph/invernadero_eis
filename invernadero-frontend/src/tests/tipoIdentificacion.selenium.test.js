@@ -36,7 +36,7 @@ async function setup() {
     .build();
 
   // Navegar al dominio antes de interactuar con localStorage
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Persistir credenciales de sesión en el almacenamiento local
   await driver.executeScript(`
@@ -66,7 +66,7 @@ async function teardown() {
  * @async
  */
 async function testCrearTipoIdentificacionCamposVacios() {
-  await driver.get("http://localhost:5173/tipo-identificacion-form");
+  await driver.get("http://localhost:4173/tipo-identificacion-form");
 
   // Esperar que el formulario esté montado
   await driver.wait(
@@ -124,7 +124,7 @@ async function testCrearTipoIdentificacionCamposVacios() {
  * @async
  */
 async function testCrearTipoIdentificacion() {
-  await driver.get("http://localhost:5173/tipo-identificacion-form");
+  await driver.get("http://localhost:4173/tipo-identificacion-form");
 
   // Esperar que los campos estén disponibles
   await driver.wait(
@@ -163,7 +163,7 @@ async function testCrearTipoIdentificacion() {
  * @async
  */
 async function testListarTipoIdentificacion() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 3 corresponde a Tipo de Identificación
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -189,7 +189,7 @@ async function testListarTipoIdentificacion() {
  * @async
  */
 async function testActualizarTipoIdentificacion() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[3].click();
@@ -228,7 +228,7 @@ async function testActualizarTipoIdentificacion() {
  * @async
  */
 async function testEliminarTipoIdentificacion() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[3].click();

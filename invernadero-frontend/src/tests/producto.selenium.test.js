@@ -35,7 +35,7 @@ async function setup() {
     .build();
 
   // Cargar la app para que el dominio esté disponible antes de tocar storage
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Inyectar token de sesión de administrador
   await driver.executeScript(`
@@ -65,7 +65,7 @@ async function teardown() {
  * @async
  */
 async function testCrearProducto() {
-  await driver.get("http://localhost:5173/producto-form");
+  await driver.get("http://localhost:4173/producto-form");
 
   // Esperar que el formulario esté completamente montado
   await driver.wait(
@@ -154,7 +154,7 @@ async function testCrearProducto() {
  * @async
  */
 async function testCrearProductoCamposVacios() {
-  await driver.get("http://localhost:5173/producto-form");
+  await driver.get("http://localhost:4173/producto-form");
 
   // Intentar guardar con el formulario vacío
   await driver.findElement(By.css("[data-testid='producto-guardar-btn']")).click();
@@ -176,7 +176,7 @@ async function testCrearProductoCamposVacios() {
  * @async
  */
 async function testListarProducto() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 2 corresponde a Productos
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -196,7 +196,7 @@ async function testListarProducto() {
  * @async
  */
 async function testActualizarProducto() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[2].click();
@@ -231,7 +231,7 @@ async function testActualizarProducto() {
  * @async
  */
 async function testEliminarProducto() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[2].click();

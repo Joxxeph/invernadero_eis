@@ -35,7 +35,7 @@ async function setup() {
     .build();
 
   // Navegar primero para que localStorage esté disponible en el dominio correcto
-  await driver.get("http://localhost:5173");
+  await driver.get("http://localhost:4173");
 
   // Inyectar credenciales de sesión
   await driver.executeScript(`
@@ -65,7 +65,7 @@ async function teardown() {
  * @async
  */
 async function testCrearPersona() {
-  await driver.get("http://localhost:5173/persona-form");
+  await driver.get("http://localhost:4173/persona-form");
 
   // Esperar a que el formulario esté montado
   await driver.wait(
@@ -129,7 +129,7 @@ async function testCrearPersona() {
  * @async
  */
 async function testCrearPersonaCamposVacios() {
-  await driver.get("http://localhost:5173/persona-form");
+  await driver.get("http://localhost:4173/persona-form");
 
   // Intentar guardar con todo vacío
   await driver.findElement(By.css("[data-testid='persona-guardar-btn']")).click();
@@ -152,7 +152,7 @@ async function testCrearPersonaCamposVacios() {
  * @async
  */
 async function testListarPersona() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 3 corresponde a Persona
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -172,7 +172,7 @@ async function testListarPersona() {
  * @async
  */
 async function testActualizarPersona() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   // Tab índice 4 para personas (puede diferir del listado)
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
@@ -208,7 +208,7 @@ async function testActualizarPersona() {
  * @async
  */
 async function testEliminarPersona() {
-  await driver.get("http://localhost:5173/informacionEntidades");
+  await driver.get("http://localhost:4173/informacionEntidades");
 
   const tabs = await driver.findElements(By.css(".MuiTab-root"));
   await tabs[4].click();
