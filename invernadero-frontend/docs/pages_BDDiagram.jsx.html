@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/BDDiagram.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/BDDiagram.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from "react";
+import Diagram from "../components/Diagram";
+import { Box, Paper, Typography, Container } from "@mui/material";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import { useTranslation } from "react-i18next";
+
+/**
+ * @file BDDiagram.jsx
+ * @description Página que muestra el diagrama del sistema.
+ */
+const BDDiagram = () => {
+  const { t } = useTranslation();
+
+  return (
+    &lt;Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)",
+        py: { xs: 3, sm: 4, md: 5 },
+        px: 2,
+      }}
+    >
+      &lt;Container maxWidth="lg">
+        {/* Header */}
+        &lt;Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+          &lt;Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: 2.5,
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+              flexShrink: 0,
+            }}
+          >
+            &lt;AccountTreeOutlinedIcon sx={{ color: "#fff", fontSize: 22 }} />
+          &lt;/Box>
+          &lt;Box>
+            &lt;Typography
+              variant="h5"
+              fontWeight={700}
+              color="grey.900"
+              letterSpacing="-0.5px"
+            >
+              {t("common.diagrama")}
+            &lt;/Typography>
+          &lt;/Box>
+        &lt;/Box>
+
+        {/* Diagram card */}
+        &lt;Paper
+          elevation={0}
+          sx={{
+            borderRadius: 4,
+            border: "1px solid",
+            borderColor: "grey.200",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
+            overflow: "hidden",
+            background: "#fff",
+          }}
+        >
+          {/* Top bar */}
+          &lt;Box
+            sx={{
+              px: 3,
+              py: 1.5,
+              borderBottom: "1px solid",
+              borderColor: "grey.100",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              background: "linear-gradient(135deg, #fafafa, #f5f3ff)",
+            }}
+          >
+            {["#f87171", "#fbbf24", "#34d399"].map((color) => (
+              &lt;Box
+                key={color}
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: color,
+                  opacity: 0.8,
+                }}
+              />
+            ))}
+            &lt;Typography
+              variant="caption"
+              color="grey.400"
+              fontWeight={500}
+              ml={1}
+            >
+              {t("common.diagrama")}
+            &lt;/Typography>
+          &lt;/Box>
+
+          {/* Diagram */}
+          &lt;Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            &lt;Diagram />
+          &lt;/Box>
+        &lt;/Paper>
+      &lt;/Container>
+    &lt;/Box>
+  );
+};
+
+export default BDDiagram;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

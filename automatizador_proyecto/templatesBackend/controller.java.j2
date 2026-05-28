@@ -1,0 +1,37 @@
+package {{ package }}.controller;
+
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import {{ package }}.model.{{ class_name }};
+import {{ package }}.service.{{ class_name }}Service;
+
+/**
+ * Autor: {{ author }}
+ * Fecha: {{ date }}
+ * Propósito: Controlador REST para {{ class_name }}
+ */
+@RestController
+@RequestMapping("/{{ url_name }}")
+public class {{ class_name }}Controller {
+
+    private final {{ class_name }}Service service;
+
+    public {{ class_name }}Controller({{ class_name }}Service service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public List<{{ class_name }}> getAll() {
+        return service.findAll();
+    }
+
+    @PostMapping
+    public {{ class_name }} save(@RequestBody {{ class_name }} entity) {
+        return service.save(entity);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
+    }
+}

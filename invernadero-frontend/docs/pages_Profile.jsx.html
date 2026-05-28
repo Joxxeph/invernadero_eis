@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/Profile.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/Profile.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-unused-vars */
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Avatar,
+  Chip,
+  Divider,
+  Skeleton,
+} from "@mui/material";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import ToggleOnOutlinedIcon from "@mui/icons-material/ToggleOnOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { logoutRequest, perfilRequest } from "../api/authApi";
+import { useNavigate } from "react-router-dom";
+import { removeToken } from "../utils/auth";
+import { useTranslation } from "react-i18next";
+
+/**
+ * @file Profile.jsx
+ * @description Página de perfil del usuario autenticado.
+ */
+const InfoRow = ({ icon, label, value }) => (
+  &lt;Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+      py: 1.75,
+    }}
+  >
+    &lt;Box
+      sx={{
+        width: 38,
+        height: 38,
+        borderRadius: 2,
+        background: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      {React.cloneElement(icon, { sx: { fontSize: 20, color: "#4f46e5" } })}
+    &lt;/Box>
+    &lt;Box>
+      &lt;Typography variant="caption" color="grey.500" fontWeight={500} display="block">
+        {label}
+      &lt;/Typography>
+      &lt;Typography variant="body1" fontWeight={600} color="grey.800">
+        {value}
+      &lt;/Typography>
+    &lt;/Box>
+  &lt;/Box>
+);
+
+const Profile = () => {
+  const [perfil, setPerfil] = useState(null);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const fetchPerfil = async () => {
+      try {
+        const data = await perfilRequest();
+        setPerfil(data);
+      } catch (err) {
+        console.log("ERROR COMPLETO:", err);
+      }
+    };
+    fetchPerfil();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    removeToken();
+    navigate("/login");
+  };
+
+  const initials = perfil?.username
+    ? perfil.username.slice(0, 2).toUpperCase()
+    : "?";
+
+  return (
+    &lt;Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)",
+        px: 2,
+      }}
+    >
+      &lt;Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: 4,
+          p: { xs: 4, sm: 5 },
+          border: "1px solid",
+          borderColor: "grey.200",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
+          background: "#fff",
+        }}
+      >
+        {/* Avatar */}
+        &lt;Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+          &lt;Avatar
+            sx={{
+              width: 72,
+              height: 72,
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              fontSize: "1.6rem",
+              fontWeight: 700,
+              boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+              mb: 1.5,
+            }}
+          >
+            {!perfil ? "?" : initials}
+          &lt;/Avatar>
+
+          {!perfil ? (
+            &lt;Skeleton width={140} height={28} sx={{ borderRadius: 1 }} />
+          ) : (
+            &lt;Typography
+              variant="h6"
+              fontWeight={700}
+              color="grey.900"
+              letterSpacing="-0.3px"
+            >
+              {perfil.username}
+            &lt;/Typography>
+          )}
+        &lt;/Box>
+
+        &lt;Divider sx={{ mb: 2 }} />
+
+        {/* Info rows */}
+        {!perfil ? (
+          &lt;>
+            &lt;Skeleton variant="rounded" height={56} sx={{ mb: 1.5, borderRadius: 2 }} />
+            &lt;Skeleton variant="rounded" height={56} sx={{ mb: 1.5, borderRadius: 2 }} />
+          &lt;/>
+        ) : (
+          &lt;>
+            &lt;InfoRow
+              icon={&lt;BadgeOutlinedIcon />}
+              label={t("inicio.rol")}
+              value={perfil.rol}
+            />
+            &lt;Divider />
+            &lt;InfoRow
+              icon={&lt;ToggleOnOutlinedIcon />}
+              label={t("inicio.estado")}
+              value={
+                &lt;Chip
+                  label={perfil.activo ? t("inicio.activo") : t("inicio.inactivo")}
+                  size="small"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.75rem",
+                    background: perfil.activo
+                      ? "linear-gradient(135deg, #d1fae5, #a7f3d0)"
+                      : "linear-gradient(135deg, #fee2e2, #fecaca)",
+                    color: perfil.activo ? "#065f46" : "#991b1b",
+                    border: "none",
+                  }}
+                />
+              }
+            />
+          &lt;/>
+        )}
+
+        &lt;Divider sx={{ mb: 3 }} />
+
+        {/* Logout button */}
+        &lt;Button
+          fullWidth
+          variant="contained"
+          size="large"
+          startIcon={&lt;LogoutIcon />}
+          onClick={handleLogout}
+          sx={{
+            py: 1.5,
+            borderRadius: 2.5,
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            textTransform: "none",
+            letterSpacing: 0.2,
+            background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+            boxShadow: "0 4px 16px rgba(79,70,229,0.35)",
+            "&amp;:hover": {
+              background: "linear-gradient(135deg, #4338ca, #6d28d9)",
+              boxShadow: "0 6px 20px rgba(79,70,229,0.45)",
+            },
+          }}
+        >
+          {t("inicio.cerrar")}
+        &lt;/Button>
+      &lt;/Paper>
+    &lt;/Box>
+  );
+};
+
+export default Profile;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

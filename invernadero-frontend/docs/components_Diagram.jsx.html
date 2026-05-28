@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/Diagram.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/Diagram.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Diagram.jsx
+ * @description Componente que renderiza un diagrama ER usando React Flow y Dagre.
+ */
+import React, { useEffect, useMemo, useState } from "react";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  MarkerType,
+  ReactFlowProvider,
+} from "reactflow";
+import dagre from "dagre";
+import "reactflow/dist/style.css";
+import { getDiagram } from "../api/diagramApi";
+import BaseTable from "./BaseTable";
+
+const nodeTypes = { BaseTable: BaseTable };
+
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const getLayoutedElements = (nodes, edges) => {
+  dagreGraph.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 120 });
+  nodes.forEach((node) => dagreGraph.setNode(node.id, { width: node.width, height: node.height }));
+  edges.forEach((edge) => dagreGraph.setEdge(edge.source, edge.target));
+  dagre.layout(dagreGraph);
+  return nodes.map((node) => {
+    const pos = dagreGraph.node(node.id);
+    return { ...node, position: { x: pos.x - node.width / 2, y: pos.y - node.height / 2 } };
+  });
+};
+
+const Diagram = () => {
+  const [rawData, setRawData] = useState([]);
+  const [expandedNodes, setExpandedNodes] = useState({});
+
+  useEffect(() => {
+    const fetchDiagram = async () => {
+      const data = await getDiagram();
+      setRawData(data);
+    };
+    fetchDiagram();
+  }, []);
+
+  const toggleNode = (id) => {
+    setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const { nodes, edges } = useMemo(() => {
+    const newNodes = rawData.map((entity) => {
+      const expanded = expandedNodes[entity.entityName];
+      return {
+        id: entity.entityName,
+        type: "BaseTable",
+        data: { ...entity, expanded, toggleNode },
+        position: { x: 0, y: 0 },
+        width: 260,
+        height: expanded ? entity.fields.length * 28 + 140 : 260,
+      };
+    });
+
+    const newEdges = [];
+    rawData.forEach((entity) => {
+      entity.relations.forEach((rel, index) => {
+        newEdges.push({
+          id: `${entity.entityName}-${rel.targetEntity}-${index}`,
+          source: entity.entityName,
+          target: rel.targetEntity,
+          type: "smoothstep",
+          animated: true,
+          markerEnd: { type: MarkerType.ArrowClosed },
+          style: { stroke: "#7c3aed", strokeWidth: 2 },
+        });
+      });
+    });
+
+    const layouted = getLayoutedElements(newNodes, newEdges);
+    return { nodes: layouted, edges: newEdges };
+  }, [rawData, expandedNodes]);
+
+  return (
+    &lt;div
+      style={{
+        height: "80vh",
+        width: "100%",
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)",
+        border: "1px solid #e0e7ff",
+        boxShadow: "0 8px 32px rgba(79,70,229,0.10)",
+        position: "relative",
+      }}
+    >
+      {/* Subtle header bar */}
+      &lt;div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 40,
+          background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
+          zIndex: 10,
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: 16,
+          gap: 8,
+        }}
+      >
+        {["#f87171", "#fbbf24", "#34d399"].map((color) => (
+          &lt;div
+            key={color}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: color,
+              opacity: 0.85,
+            }}
+          />
+        ))}
+        &lt;span
+          style={{
+            color: "rgba(255,255,255,0.75)",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            marginLeft: 8,
+            letterSpacing: "0.5px",
+            textTransform: "uppercase",
+          }}
+        >
+          Diagrama ER
+        &lt;/span>
+      &lt;/div>
+
+      &lt;div style={{ paddingTop: 40, height: "100%" }}>
+        &lt;ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+          proOptions={{ hideAttribution: true }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+          minZoom={0.3}
+          maxZoom={1.5}
+        >
+          &lt;MiniMap
+            zoomable
+            pannable
+            style={{
+              background: "#ede9fe",
+              border: "1px solid #c4b5fd",
+              borderRadius: 8,
+            }}
+            maskColor="rgba(79,70,229,0.08)"
+            nodeColor="#7c3aed"
+          />
+          &lt;Controls
+            style={{
+              background: "#fff",
+              border: "1px solid #e0e7ff",
+              borderRadius: 10,
+              boxShadow: "0 2px 12px rgba(79,70,229,0.12)",
+            }}
+          />
+          &lt;Background
+            gap={24}
+            size={1}
+            color="#c7d2fe"
+          />
+        &lt;/ReactFlow>
+      &lt;/div>
+    &lt;/div>
+  );
+};
+
+export default function DiagramWrapper() {
+  return (
+    &lt;ReactFlowProvider>
+      &lt;Diagram />
+    &lt;/ReactFlowProvider>
+  );
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

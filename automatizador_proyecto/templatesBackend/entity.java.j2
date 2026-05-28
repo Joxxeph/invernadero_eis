@@ -1,0 +1,45 @@
+package {{ package }}.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import java.time.*;
+import java.math.*;
+
+/**
+ * Autor: {{ author }}
+ * Fecha: {{ date }}
+ * Propósito: Entidad {{ class_name }} generada automáticamente
+ */
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class {{ class_name }} {
+
+{% set field_map = {} %}
+{% for field in fields %}
+{% set _ = field_map.update({field.name: field}) %}
+    /**
+     * {{ field.description }}
+     */
+{% if field.pk %}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+{% endif %}
+{% if field.not_null %}
+    @NotNull
+{% endif %}
+    private {{ field.type }} {{ field.name }};
+{% endfor %}
+
+{% for rel in relations %}
+    /**
+     * Relación ManyToOne con {{ rel.class_name }}
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "{{ rel.local_field }}"{% if field_map[rel.local_field] is defined %}, insertable=false, updatable=false{% endif %})
+    private {{ rel.class_name }} {{ rel.field_name }};
+{% endfor %}
+}

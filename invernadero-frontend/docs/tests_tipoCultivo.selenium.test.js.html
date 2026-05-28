@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: tests/tipoCultivo.selenium.test.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: tests/tipoCultivo.selenium.test.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file tipoCultivo.selenium.test.js
+ * @description Suite end-to-end para el módulo Tipo de Cultivo.
+ * Verifica CRUD completo y reglas de validación del formulario.
+ * Usa Chrome headless con Selenium WebDriver.
+ */
+
+/* eslint-disable no-unused-vars */
+import { Builder, By, until } from "selenium-webdriver";
+import chrome from "selenium-webdriver/chrome.js";
+
+// Instancia compartida del driver
+let driver;
+
+// ===========================================================================
+// CONFIGURACIÓN
+// ===========================================================================
+
+/**
+ * Inicializa el navegador en modo headless e inyecta
+ * el token JWT para omitir el flujo de autenticación.
+ * @async
+ */
+async function setup() {
+  const options = new chrome.Options();
+  options.addArguments("--headless=new");
+  options.addArguments("--no-sandbox");
+  options.addArguments("--disable-dev-shm-usage");
+  options.addArguments("--disable-gpu");
+  options.addArguments("--window-size=1920,1080");
+
+  driver = await new Builder()
+    .forBrowser("chrome")
+    .setChromeOptions(options)
+    .build();
+
+  // Visitar la app antes de escribir en localStorage
+  await driver.get("http://localhost:4173");
+
+  // Inyectar token de sesión de administrador
+  await driver.executeScript(`
+    localStorage.setItem("token", "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbGVqYWIyMzAyQGdtYWlsLmNvbSIsInJvbCI6IkFETUlOIiwiaWF0IjoxNzc3OTIxMTMzLCJleHAiOjE3NzgwMDc1MzN9.1nOLGHk1NPUViegqJHul6RJOKMBJnt3p-Qn6jsoyZlnGfoi4xHLKhAkfuA43eu6Y");
+  `);
+
+  // Recargar para activar el token en la sesión
+  await driver.navigate().refresh();
+}
+
+/**
+ * Libera el navegador al terminar todos los casos.
+ * @async
+ */
+async function teardown() {
+  await driver.quit();
+}
+
+// ===========================================================================
+// CASOS DE PRUEBA
+// ===========================================================================
+
+/**
+ * TC-TPC-01: Bloqueo de creación con campos vacíos.
+ * Confirma que el formulario no haga submit cuando
+ * no hay datos ingresados (no debe aparecer el snackbar de éxito).
+ * @async
+ */
+async function testCrearTipoCultivoVacio() {
+  await driver.get("http://localhost:4173/tipo-cultivo-form");
+
+  // Pulsar guardar sin rellenar nada
+  await driver.findElement(By.css("[data-testid='tipocultivo-guardar-btn']")).click();
+
+  // Si aparece el snackbar de éxito, la prueba falla
+  let snackbarApareció = true;
+  try {
+    await driver.wait(
+      until.elementLocated(By.css("[data-testid='success-snackbar']")),
+      3000,
+    );
+  } catch (e) {
+    snackbarApareció = false;
+  }
+
+  if (snackbarApareció) {
+    throw new Error("❌ No debería permitir creación vacía");
+  }
+
+  console.log("🚫 VALIDACIÓN OK (no permite vacíos)");
+}
+
+/**
+ * TC-TPC-02: Alta exitosa de un tipo de cultivo.
+ * Rellena todos los campos del formulario y verifica
+ * el snackbar de confirmación.
+ * @async
+ */
+async function testCrearTipoCultivo() {
+  await driver.get("http://localhost:4173/tipo-cultivo-form");
+
+  // Esperar que el formulario esté disponible
+  await driver.wait(
+    until.elementLocated(By.css("[data-testid='tipocultivo-nombre-input']")),
+    10000,
+  );
+
+  await driver
+    .findElement(By.css("[data-testid='tipocultivo-nombre-input']"))
+    .sendKeys("Cultivo Selenium");
+
+  await driver
+    .findElement(By.css("[data-testid='tipocultivo-descripcion-input']"))
+    .sendKeys("Descripción test");
+
+  await driver
+    .findElement(By.css("[data-testid='tipocultivo-clasificacion-input']"))
+    .sendKeys("Frutal");
+
+  await driver
+    .findElement(By.css("[data-testid='tipocultivo-tiempocosechadias-input']"))
+    .sendKeys("30");
+
+  await driver
+    .findElement(By.css("[data-testid='tipocultivo-temporada-input']"))
+    .sendKeys("Verano");
+
+  // Enviar formulario y confirmar éxito
+  await driver.findElement(By.css("[data-testid='tipocultivo-guardar-btn']")).click();
+
+  const snackbar = await driver.wait(
+    until.elementLocated(By.css("[data-testid='success-snackbar']")),
+    10000,
+  );
+  console.log("🟢 CREATE OK:", await snackbar.getText());
+}
+
+/**
+ * TC-TPC-03: Listado de tipos de cultivo registrados.
+ * Navega al tab correspondiente, cuenta las filas y
+ * lanza error si la tabla está vacía.
+ * @async
+ */
+async function testListarTipoCultivo() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  // Tab índice 0 corresponde a Tipo de Cultivo
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[0].click();
+
+  const rows = await driver.wait(
+    until.elementsLocated(By.css("tbody tr")),
+    10000,
+  );
+  console.log(`📋 TIPOS CULTIVO: ${rows.length}`);
+
+  if (rows.length === 0) {
+    throw new Error("❌ No hay registros de tipo cultivo");
+  }
+
+  console.log("✅ LISTADO OK");
+}
+
+/**
+ * TC-TPC-04: Modificación de un tipo de cultivo existente.
+ * Abre el primer registro en edición, reemplaza el nombre
+ * y guarda el cambio.
+ * @async
+ */
+async function testActualizarTipoCultivo() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[0].click();
+
+  // Esperar y pulsar el primer botón de edición
+  const editBtn = await driver.wait(
+    until.elementLocated(By.css("[data-testid^='edit-btn-']")),
+    10000,
+  );
+  await editBtn.click();
+
+  // Esperar que el formulario de edición cargue
+  await driver.wait(
+    until.elementLocated(By.css("[data-testid='tipocultivo-nombre-input']")),
+    10000,
+  );
+
+  const nombre = await driver.findElement(
+    By.css("[data-testid='tipocultivo-nombre-input']"),
+  );
+  await nombre.clear();
+  await nombre.sendKeys("EDITADO CULTIVO");
+
+  await driver.findElement(By.css("[data-testid='tipocultivo-guardar-btn']")).click();
+
+  console.log("✏️ UPDATE OK");
+}
+
+/**
+ * TC-TPC-05: Eliminación del primer tipo de cultivo.
+ * Localiza el botón de borrado, acepta la confirmación
+ * y registra el resultado.
+ * @async
+ */
+async function testEliminarTipoCultivo() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[0].click();
+
+  // Obtener todos los botones delete y usar el primero
+  const deleteButtons = await driver.findElements(
+    By.css("[data-testid^='delete-btn-']"),
+  );
+
+  if (!deleteButtons[0]) {
+    throw new Error("❌ No hay botón delete");
+  }
+
+  await deleteButtons[0].click();
+
+  // Aceptar el confirm nativo del navegador
+  await driver.switchTo().alert().accept();
+
+  // Pequeña pausa para que la lista se refresque
+  await driver.sleep(1500);
+
+  console.log("🗑 DELETE OK");
+}
+
+// ===========================================================================
+// RUNNER
+// ===========================================================================
+
+/**
+ * Punto de entrada de la suite.
+ * Orden: validar vacíos → crear → listar → actualizar → eliminar.
+ */
+(async function run() {
+  await setup();
+
+  try {
+    console.log("==== TEST TIPO CULTIVO ====");
+
+    await testCrearTipoCultivoVacio();
+    await testCrearTipoCultivo();
+    await testListarTipoCultivo();
+    await testActualizarTipoCultivo();
+    await testEliminarTipoCultivo();
+
+    console.log("🎉 TODAS LAS PRUEBAS OK");
+  } catch (error) {
+    console.error("❌ ERROR SUITE:", error);
+  } finally {
+    await teardown();
+  }
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

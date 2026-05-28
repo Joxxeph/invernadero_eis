@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/GenericTable.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/GenericTable.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from "react";
+import { useTranslation } from "react-i18next";
+/**
+ * @file GenericTable.jsx
+ * @description Tabla reutilizable para mostrar datos dinámicos con acciones de edición y eliminación.
+ */
+import {
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+  Typography,
+  Box,
+  TableContainer,
+  Tooltip,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+/**
+ * @component GenericTable
+ *
+ * @description Tabla genérica reutilizable que soporta:
+ * - Renderizado dinámico de columnas
+ * - Acciones de editar y eliminar
+ * - Soporte para propiedades anidadas (ej: persona.identificacion)
+ *
+ * @param {Object} props
+ * @param {string} props.title - Título de la tabla
+ * @param {Array&lt;Object>} props.columns - Definición de columnas
+ * @param {Array&lt;Object>} props.rows - Datos a mostrar
+ * @param {Function} props.onEdit - Acción al editar fila
+ * @param {Function} props.onDelete - Acción al eliminar fila
+ */
+const GenericTable = ({ title, columns, rows, onEdit, onDelete }) => {
+  const { t } = useTranslation();
+
+  const getValue = (obj, path) => {
+    return path
+      .split(/\.|\[|\]/)
+      .filter(Boolean)
+      .reduce((acc, key) => {
+        return acc ? acc[key] : undefined;
+      }, obj);
+  };
+
+  return (
+    &lt;Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        width: "95%",
+        border: "1.5px solid rgba(99,102,241,0.15)",
+        boxShadow:
+          "0 0 0 1px rgba(99,102,241,0.08), 0 12px 40px rgba(99,102,241,0.14), 0 2px 8px rgba(0,0,0,0.06)",
+        background: "#ffffff",
+      }}
+    >
+      {/* ── Header multicolor ── */}
+      &lt;Box
+        sx={{
+          background:
+            "#8b5cf6",
+          px: { xs: 2, sm: 3 },
+          py: 1.75,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "relative",
+          overflow: "hidden",
+          "&amp;::after": {
+            content: '""',
+            position: "absolute",
+            top: 0, left: 0, right: 0,
+            height: "50%",
+            background: "rgba(255,255,255,0.10)",
+            borderRadius: "0 0 60% 60% / 0 0 40% 40%",
+            pointerEvents: "none",
+          },
+        }}
+      >
+        &lt;Typography
+          variant="h6"
+          fontWeight={800}
+          color="#fff"
+          letterSpacing={0.4}
+          sx={{
+            fontSize: { xs: "0.95rem", sm: "1.1rem" },
+            textShadow: "0 1px 6px rgba(0,0,0,0.2)",
+            zIndex: 1,
+          }}
+        >
+          {title}
+        &lt;/Typography>
+
+      &lt;/Box>
+
+      {/* ── Table ── */}
+      &lt;TableContainer sx={{ px: { xs: 1, sm: 2 }, pt: 1.5, pb: 1 }}>
+        &lt;Table sx={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate", borderSpacing: "0 4px" }}>
+
+          {/* ── Head ── */}
+          &lt;TableHead>
+            &lt;TableRow>
+              {columns.map((col, index) => (
+                &lt;TableCell
+                  key={index}
+                  sx={{
+                    fontSize: { xs: "11px", sm: "12px" },
+                    fontWeight: 800,
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                    width: col.width || "auto",
+                    color: "#6366f1",
+                    borderBottom: "2px solid rgba(99,102,241,0.2)",
+                    pb: 1,
+                    letterSpacing: 0.4,
+                    textTransform: "uppercase",
+                    background: "transparent",
+                  }}
+                >
+                  {col.label}
+                &lt;/TableCell>
+              ))}
+              &lt;TableCell
+                sx={{
+                  fontWeight: 800,
+                  textAlign: "center",
+                  width: "120px",
+                  fontSize: { xs: "11px", sm: "12px" },
+                  color: "#6366f1",
+                  borderBottom: "2px solid rgba(99,102,241,0.2)",
+                  pb: 1,
+                  letterSpacing: 0.4,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("common.acciones")}
+              &lt;/TableCell>
+            &lt;/TableRow>
+          &lt;/TableHead>
+
+          {/* ── Body ── */}
+          &lt;TableBody>
+            {rows.map((row, i) => (
+              &lt;TableRow
+                key={i}
+                sx={{
+                  "&amp; td": {
+                    background: i % 2 === 0 ? "#fafafe" : "#ffffff",
+                    borderTop: "1.5px solid rgba(99,102,241,0.07)",
+                    borderBottom: "1.5px solid rgba(99,102,241,0.07)",
+                    "&amp;:first-of-type": {
+                      borderLeft: "1.5px solid rgba(99,102,241,0.07)",
+                      borderRadius: "10px 0 0 10px",
+                    },
+                    "&amp;:last-of-type": {
+                      borderRight: "1.5px solid rgba(99,102,241,0.07)",
+                      borderRadius: "0 10px 10px 0",
+                    },
+                  },
+                  "&amp;:hover td": {
+                    background: "rgba(99,102,241,0.05)",
+                    borderColor: "rgba(99,102,241,0.18)",
+                    transform: "translateX(2px)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {columns.map((col, j) => (
+                  &lt;TableCell
+                    key={j}
+                    sx={{
+                      fontSize: { xs: "11px", sm: "13px" },
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
+                      width: columns[j].width || "auto",
+                      color: "#334155",
+                      py: 1,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {typeof row[col.field] === "boolean" ? (
+                      &lt;Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          background: row[col.field]
+                            ? "linear-gradient(135deg,#10b981,#34d399)"
+                            : "linear-gradient(135deg,#f43f5e,#fb7185)",
+                          color: "#fff",
+                          borderRadius: "8px",
+                          px: 1,
+                          py: 0.2,
+                          fontSize: "0.68rem",
+                          fontWeight: 800,
+                          letterSpacing: 0.3,
+                          boxShadow: row[col.field]
+                            ? "0 2px 6px rgba(16,185,129,0.35)"
+                            : "0 2px 6px rgba(244,63,94,0.35)",
+                        }}
+                      >
+                        {row[col.field] ? t("common.si") : t("common.no")}
+                      &lt;/Box>
+                    ) : (
+                      getValue(row, col.field)?.toString()
+                    )}
+                  &lt;/TableCell>
+                ))}
+
+                {/* ── Acciones ── */}
+                &lt;TableCell sx={{ transition: "all 0.15s ease" }}>
+                  &lt;Box sx={{ display: "flex", justifyContent: "center", gap: 0.75 }}>
+                    &lt;Tooltip title={t("common.editar") ?? "Editar"} arrow>
+                      &lt;IconButton
+                        onClick={() => onEdit(row)}
+                        data-testid={`edit-btn-${row.id}`}
+                        size="small"
+                        sx={{
+                          background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                          color: "#fff",
+                          width: 30,
+                          height: 30,
+                          boxShadow: "0 2px 8px rgba(99,102,241,0.4)",
+                          "&amp;:hover": {
+                            background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                            boxShadow: "0 4px 12px rgba(99,102,241,0.55)",
+                            transform: "scale(1.1)",
+                          },
+                          transition: "all 0.18s ease",
+                        }}
+                      >
+                        &lt;EditIcon sx={{ fontSize: 15 }} />
+                      &lt;/IconButton>
+                    &lt;/Tooltip>
+
+                    &lt;Tooltip title={t("common.eliminar") ?? "Eliminar"} arrow>
+                      &lt;IconButton
+                        onClick={() => onDelete(row.id)}
+                        data-testid={`delete-btn-${row.id}`}
+                        size="small"
+                        sx={{
+                          background: "linear-gradient(135deg,#f43f5e,#fb7185)",
+                          color: "#fff",
+                          width: 30,
+                          height: 30,
+                          boxShadow: "0 2px 8px rgba(244,63,94,0.4)",
+                          "&amp;:hover": {
+                            background: "linear-gradient(135deg,#e11d48,#f43f5e)",
+                            boxShadow: "0 4px 12px rgba(244,63,94,0.55)",
+                            transform: "scale(1.1)",
+                          },
+                          transition: "all 0.18s ease",
+                        }}
+                      >
+                        &lt;DeleteIcon sx={{ fontSize: 15 }} />
+                      &lt;/IconButton>
+                    &lt;/Tooltip>
+                  &lt;/Box>
+                &lt;/TableCell>
+              &lt;/TableRow>
+            ))}
+
+            {/* Estado vacío */}
+            {rows.length === 0 &amp;&amp; (
+              &lt;TableRow>
+                &lt;TableCell
+                  colSpan={columns.length + 1}
+                  align="center"
+                  sx={{
+                    py: 4,
+                    color: "#94a3b8",
+                    fontSize: "0.85rem",
+                    fontStyle: "italic",
+                    border: "none",
+                  }}
+                >
+                  {t("common.sinDatos") ?? "Sin datos para mostrar"}
+                &lt;/TableCell>
+              &lt;/TableRow>
+            )}
+          &lt;/TableBody>
+        &lt;/Table>
+      &lt;/TableContainer>
+
+    &lt;/Paper>
+  );
+};
+
+export default GenericTable;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

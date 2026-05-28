@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/BaseTable.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/BaseTable.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from "react";
+import { Handle, Position } from "reactflow";
+import { useTranslation } from "react-i18next";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  ButtonBase,
+} from "@mui/material";
+import KeyIcon from "@mui/icons-material/Key";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import NumbersIcon from "@mui/icons-material/Numbers";
+import TextFieldsIcon from "@mui/icons-material/TextFields";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import DataObjectIcon from "@mui/icons-material/DataObject";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+
+/**
+ * Devuelve color e ícono según el tipo de campo SQL
+ */
+const getTypeStyle = (type = "") => {
+  const t = type.toUpperCase();
+  if (["INT", "BIGINT", "INTEGER", "SMALLINT", "SERIAL", "LONG", "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC"].some(k => t.includes(k)))
+    return { bg: "#fef3c7", color: "#b45309", icon: &lt;NumbersIcon sx={{ fontSize: 12 }} /> };
+  if (["VARCHAR", "TEXT", "CHAR", "STRING", "CLOB", "NVARCHAR"].some(k => t.includes(k)))
+    return { bg: "#d1fae5", color: "#047857", icon: &lt;TextFieldsIcon sx={{ fontSize: 12 }} /> };
+  if (["DATE", "TIME", "TIMESTAMP", "DATETIME"].some(k => t.includes(k)))
+    return { bg: "#e0e7ff", color: "#4338ca", icon: &lt;CalendarMonthIcon sx={{ fontSize: 12 }} /> };
+  if (["BOOL", "BOOLEAN", "BIT"].some(k => t.includes(k)))
+    return { bg: "#fce7f3", color: "#be185d", icon: &lt;ToggleOnIcon sx={{ fontSize: 12 }} /> };
+  if (["JSON", "JSONB", "BLOB", "BINARY", "BYTEA"].some(k => t.includes(k)))
+    return { bg: "#f3e8ff", color: "#7e22ce", icon: &lt;DataObjectIcon sx={{ fontSize: 12 }} /> };
+  return { bg: "#f1f5f9", color: "#475569", icon: &lt;HelpOutlineIcon sx={{ fontSize: 12 }} /> };
+};
+
+/**
+ * @component BaseTable
+ * @description Tarjeta de entidad con campos coloreados por tipo de dato.
+ */
+const BaseTable = ({ data }) => {
+  const expanded = data.expanded;
+  const visibleFields = expanded ? data.fields : data.fields.slice(0, 6);
+  const { t } = useTranslation();
+
+  return (
+    &lt;Card
+      elevation={0}
+      sx={{
+        width: 260,
+        borderRadius: 3,
+        overflow: "hidden",
+        border: "1px solid #e0e7ff",
+        boxShadow: "0 8px 28px rgba(79,70,229,0.14)",
+        background: "#fff",
+      }}
+    >
+      {/* Header */}
+      &lt;Box
+        sx={{
+          background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
+          px: 1.5,
+          py: 1.1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        &lt;Typography
+          variant="subtitle2"
+          fontWeight={700}
+          color="#fff"
+          letterSpacing={0.3}
+          noWrap
+          sx={{ flexGrow: 1, textAlign: "center" }}
+        >
+          {data.entityName}
+        &lt;/Typography>
+        &lt;Box
+          sx={{
+            background: "rgba(255,255,255,0.2)",
+            borderRadius: 1,
+            px: 0.75,
+            py: 0.15,
+            fontSize: "0.65rem",
+            color: "#fff",
+            fontWeight: 700,
+            flexShrink: 0,
+            ml: 1,
+          }}
+        >
+          {data.fields.length}
+        &lt;/Box>
+      &lt;/Box>
+
+      {/* Fields */}
+      &lt;CardContent sx={{ p: "6px !important", pb: "4px !important" }}>
+        {visibleFields.map((field, index) => {
+          const typeStyle = getTypeStyle(field.type);
+          return (
+            &lt;Box
+              key={index}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 0.45,
+                px: 0.75,
+                mb: 0.3,
+                borderRadius: 1.5,
+                background: field.primaryKey ? "rgba(245,158,11,0.08)" : "#fafafa",
+                border: "1px solid",
+                borderColor: field.primaryKey ? "rgba(245,158,11,0.25)" : "#f0f0f8",
+                "&amp;:hover": { background: field.primaryKey ? "rgba(245,158,11,0.12)" : "#f5f3ff" },
+                transition: "background 0.15s",
+              }}
+            >
+              {/* Field name + PK icon */}
+              &lt;Box display="flex" alignItems="center" gap={0.6}>
+                {field.primaryKey ? (
+                  &lt;KeyIcon sx={{ fontSize: 13, color: "#f59e0b" }} />
+                ) : (
+                  &lt;Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: typeStyle.color,
+                      opacity: 0.6,
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                &lt;Typography
+                  variant="caption"
+                  fontWeight={field.primaryKey ? 700 : 500}
+                  color={field.primaryKey ? "#b45309" : "grey.700"}
+                  sx={{ fontSize: "0.72rem" }}
+                >
+                  {field.name}
+                &lt;/Typography>
+              &lt;/Box>
+
+              {/* Type badge */}
+              &lt;Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.4,
+                  background: typeStyle.bg,
+                  color: typeStyle.color,
+                  borderRadius: 1,
+                  px: 0.75,
+                  py: 0.15,
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  maxWidth: 90,
+                  overflow: "hidden",
+                }}
+              >
+                {typeStyle.icon}
+                &lt;span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {field.type}
+                &lt;/span>
+              &lt;/Box>
+            &lt;/Box>
+          );
+        })}
+
+        {/* Expand / collapse */}
+        {data.fields.length > 6 &amp;&amp; (
+          &lt;ButtonBase
+            onClick={() => data.toggleNode(data.entityName)}
+            sx={{
+              width: "100%",
+              mt: 0.5,
+              py: 0.7,
+              borderRadius: 1.5,
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              fontFamily: "inherit",
+              color: "#4f46e5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 0.5,
+              background: "rgba(79,70,229,0.05)",
+              border: "1px dashed #c4b5fd",
+              "&amp;:hover": { background: "rgba(79,70,229,0.10)" },
+              transition: "background 0.2s",
+            }}
+          >
+            {expanded ? (
+              &lt;>&lt;ExpandLessIcon sx={{ fontSize: 14 }} />{t("common.verMenos")}&lt;/>
+            ) : (
+              &lt;>&lt;ExpandMoreIcon sx={{ fontSize: 14 }} />{`${t("common.ver")} ${data.fields.length - 6} ${t("common.camposMas")}`}&lt;/>
+            )}
+          &lt;/ButtonBase>
+        )}
+      &lt;/CardContent>
+
+      {/* Legend */}
+      &lt;Box
+        sx={{
+          px: 1.25,
+          py: 0.75,
+          borderTop: "1px solid #f0f0f8",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 0.6,
+        }}
+      >
+        {[
+          { label: "NUM", bg: "#fef3c7", color: "#b45309" },
+          { label: "TXT", bg: "#d1fae5", color: "#047857" },
+          { label: "DATE", bg: "#e0e7ff", color: "#4338ca" },
+          { label: "BOOL", bg: "#fce7f3", color: "#be185d" },
+          { label: "JSON", bg: "#f3e8ff", color: "#7e22ce" },
+        ].map((item) => (
+          &lt;Box
+            key={item.label}
+            sx={{
+              background: item.bg,
+              color: item.color,
+              borderRadius: 0.75,
+              px: 0.6,
+              py: 0.1,
+              fontSize: "0.58rem",
+              fontWeight: 700,
+            }}
+          >
+            {item.label}
+          &lt;/Box>
+        ))}
+      &lt;/Box>
+
+      &lt;Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: "#7c3aed", width: 8, height: 8, border: "2px solid #fff" }}
+      />
+      &lt;Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: "#4f46e5", width: 8, height: 8, border: "2px solid #fff" }}
+      />
+    &lt;/Card>
+  );
+};
+
+export default BaseTable;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

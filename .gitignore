@@ -1,0 +1,21 @@
+# FRONTEND
+invernadero-frontend/node_modules/
+invernadero-frontend/build/
+invernadero-frontend/dist/
+invernadero-frontend/coverage/
+invernadero-frontend/.env
+
+# BACKEND
+invernadero/target/
+invernadero/.idea/
+invernadero/*.log
+
+# GENERAL
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# TEST REPORTS
+**/surefire-reports/
+coverage/

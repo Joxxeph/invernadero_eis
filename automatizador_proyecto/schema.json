@@ -1,0 +1,605 @@
+{
+    "proyecto": "invernaderoeis",
+    "motor": "postgres",
+    "host": "localhost",
+    "port": "5432",
+    "database": "invernaderoeis",
+    "username": "postgres",
+    "password": "Joseph.0603",
+    "entities": [
+        {
+            "name": "usuario",
+            "description": "Tabla de usuarios del sistema",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "ID único del usuario"
+                },
+                {
+                    "name": "username",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre de usuario único"
+                },
+                {
+                    "name": "password",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Contraseña encriptada del usuario"
+                },
+                {
+                    "name": "rol",
+                    "type": "string",
+                    "length": 30,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Rol asignado al usuario dentro del sistema"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si el usuario se encuentra activo"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["username"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Nombre de usuario único en el sistema"
+                }
+            ]
+        },
+        {
+            "name": "tipo_identificacion",
+            "description": "Tabla de tipos de identificación",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único del tipo de identificación"
+                },
+                {
+                    "name": "nombre",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre del tipo de identificación (Cédula, NIT, Pasaporte, etc.)"
+                },
+                {
+                    "name": "abreviatura",
+                    "type": "string",
+                    "length": 10,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Abreviatura del tipo de identificación (CC, NIT, PAS, etc.)"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si el tipo de identificación está activo"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["nombre"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Nombre único del tipo de identificación"
+                },
+                {
+                    "columns": ["abreviatura"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Abreviatura única del tipo de identificación"
+                }
+            ]
+        },
+        {
+            "name": "persona",
+            "description": "Tabla de personas (clientes y empleados)",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único de la persona"
+                },
+                {
+                    "name": "id_tipo_identificacion",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Identificador del tipo de identificación (FK)"
+                },
+                {
+                    "name": "identificacion",
+                    "type": "string",
+                    "length": 20,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Número de identificación de la persona"
+                },
+                {
+                    "name": "nombre",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre(s) de la persona"
+                },
+                {
+                    "name": "apellido",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Apellido(s) de la persona"
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Correo electrónico de la persona"
+                },
+                {
+                    "name": "telefono",
+                    "type": "string",
+                    "length": 20,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Teléfono de contacto"
+                },
+                {
+                    "name": "direccion",
+                    "type": "string",
+                    "length": 200,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Dirección física"
+                },
+                {
+                    "name": "fecha_registro",
+                    "type": "datetime",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Fecha de registro en el sistema"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si la persona está activa en el sistema"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["identificacion", "id_tipo_identificacion"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Combinación única de tipo y número de identificación"
+                },
+                {
+                    "columns": ["email"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Email único"
+                }
+            ],
+            "relations": [
+                {
+                    "local_field": "id_tipo_identificacion",
+                    "entity": "tipo_identificacion",
+                    "related_field": "id",
+                    "type": "many_to_one",
+                    "description": "Relación entre persona y tipo de identificación"
+                }
+            ]
+        },
+        {
+            "name": "cliente",
+            "description": "Tabla de clientes (extensión de persona)",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único del cliente"
+                },
+                {
+                    "name": "id_persona",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Identificador de la persona (FK)"
+                },
+                {
+                    "name": "categoria",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Categoría del cliente (regular, premium, etc.)"
+                },
+                {
+                    "name": "descuento",
+                    "type": "decimal",
+                    "length": 5,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Porcentaje de descuento aplicable"
+                },
+                {
+                    "name": "frecuencia_compra",
+                    "type": "string",
+                    "length": 20,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Frecuencia de compra del cliente"
+                },
+                {
+                    "name": "fecha_ultima_compra",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Fecha de la última compra"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["id_persona"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Un cliente solo puede estar asociado a una persona"
+                }
+            ],
+            "relations": [
+                {
+                    "local_field": "id_persona",
+                    "entity": "persona",
+                    "related_field": "id",
+                    "type": "one_to_one",
+                    "description": "Relación entre cliente y persona"
+                }
+            ]
+        },
+        {
+            "name": "tipo_cultivo",
+            "description": "Tabla de tipos de cultivo",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único del tipo de cultivo"
+                },
+                {
+                    "name": "nombre",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre del tipo de cultivo"
+                },
+                {
+                    "name": "descripcion",
+                    "type": "string",
+                    "length": 500,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Descripción detallada del tipo de cultivo"
+                },
+                {
+                    "name": "clasificacion",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Clasificación (hortalizas, frutas, aromáticas, etc.)"
+                },
+                {
+                    "name": "tiempo_cosecha_dias",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Tiempo promedio de cosecha en días"
+                },
+                {
+                    "name": "temporada",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Temporada recomendada para el cultivo"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si el tipo de cultivo está activo"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["nombre"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Nombre único del tipo de cultivo"
+                }
+            ]
+        },
+        {
+            "name": "cultivo",
+            "description": "Tabla de cultivos",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único del cultivo"
+                },
+                {
+                    "name": "id_tipo_cultivo",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Identificador del tipo de cultivo (FK)"
+                },
+                {
+                    "name": "nombre",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre del cultivo"
+                },
+                {
+                    "name": "descripcion",
+                    "type": "string",
+                    "length": 500,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Descripción del cultivo"
+                },
+                {
+                    "name": "fecha_siembra",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Fecha de siembra"
+                },
+                {
+                    "name": "fecha_estimada_cosecha",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Fecha estimada de cosecha"
+                },
+                {
+                    "name": "fecha_cosecha",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Fecha real de cosecha"
+                },
+                {
+                    "name": "area_sembrada",
+                    "type": "decimal",
+                    "length": 10,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Área sembrada en metros cuadrados"
+                },
+                {
+                    "name": "cantidad_sembrada",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Cantidad de plantas o semillas sembradas"
+                },
+                {
+                    "name": "rendimiento_estimado",
+                    "type": "decimal",
+                    "length": 10,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Rendimiento estimado en kilogramos"
+                },
+                {
+                    "name": "estado",
+                    "type": "string",
+                    "length": 20,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Estado del cultivo (planeado, activo, cosechado, cancelado)"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si el cultivo está activo"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["nombre", "fecha_siembra"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Combinación única de nombre y fecha de siembra"
+                }
+            ],
+            "relations": [
+                {
+                    "local_field": "id_tipo_cultivo",
+                    "entity": "tipo_cultivo",
+                    "related_field": "id",
+                    "type": "many_to_one",
+                    "description": "Relación entre cultivo y tipo de cultivo"
+                }
+            ]
+        },
+        {
+            "name": "producto",
+            "description": "Tabla de productos",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "identity",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": true,
+                    "description": "Identificador único del producto"
+                },
+                {
+                    "name": "id_cultivo",
+                    "type": "integer",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Identificador del cultivo (FK)"
+                },
+                {
+                    "name": "nombre",
+                    "type": "string",
+                    "length": 100,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Nombre del producto"
+                },
+                {
+                    "name": "descripcion",
+                    "type": "string",
+                    "length": 500,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Descripción detallada del producto"
+                },
+                {
+                    "name": "precio",
+                    "type": "decimal",
+                    "length": 12,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Precio unitario del producto"
+                },
+                {
+                    "name": "unidad_medida",
+                    "type": "string",
+                    "length": 20,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Unidad de medida (kilogramo, unidad, libra, etc.)"
+                },
+                {
+                    "name": "stock_actual",
+                    "type": "decimal",
+                    "length": 12,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Cantidad actual en inventario"
+                },
+                {
+                    "name": "stock_minimo",
+                    "type": "decimal",
+                    "length": 12,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Stock mínimo para reabastecimiento"
+                },
+                {
+                    "name": "categoria",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Categoría del producto"
+                },
+                {
+                    "name": "fecha_cosecha",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Fecha de cosecha del producto"
+                },
+                {
+                    "name": "fecha_vencimiento",
+                    "type": "date",
+                    "length": 0,
+                    "nullable": true,
+                    "pk": false,
+                    "description": "Fecha de vencimiento del producto"
+                },
+                {
+                    "name": "activo",
+                    "type": "boolean",
+                    "length": 0,
+                    "nullable": false,
+                    "pk": false,
+                    "description": "Indica si el producto está activo"
+                }
+            ],
+            "constrains": [
+                {
+                    "columns": ["nombre"],
+                    "type": "unique",
+                    "values": "",
+                    "description": "Nombre único del producto"
+                }
+            ],
+            "relations": [
+                {
+                    "local_field": "id_cultivo",
+                    "entity": "cultivo",
+                    "related_field": "id",
+                    "type": "many_to_one",
+                    "description": "Relación entre producto y cultivo (un cultivo puede tener múltiples productos)"
+                }
+            ]
+        }
+    ]
+}

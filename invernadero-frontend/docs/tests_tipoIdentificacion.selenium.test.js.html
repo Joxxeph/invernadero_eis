@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: tests/tipoIdentificacion.selenium.test.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: tests/tipoIdentificacion.selenium.test.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file tipoIdentificacion.selenium.test.js
+ * @description Suite end-to-end para el módulo Tipo de Identificación.
+ * Cubre el ciclo completo: validación de campos vacíos, creación,
+ * listado, actualización y eliminación.
+ * Usa Chrome headless vía Selenium WebDriver.
+ */
+
+/* eslint-disable no-unused-vars */
+import { Builder, By, until } from "selenium-webdriver";
+import chrome from "selenium-webdriver/chrome.js";
+
+// Driver compartido entre todos los casos de la suite
+let driver;
+
+// ===========================================================================
+// CONFIGURACIÓN
+// ===========================================================================
+
+/**
+ * Levanta el navegador en modo headless e inyecta el token JWT
+ * para evitar el flujo de autenticación manual.
+ * @async
+ */
+async function setup() {
+  const options = new chrome.Options();
+  options.addArguments("--headless=new");
+  options.addArguments("--no-sandbox");
+  options.addArguments("--disable-dev-shm-usage");
+  options.addArguments("--disable-gpu");
+  options.addArguments("--window-size=1920,1080");
+
+  driver = await new Builder()
+    .forBrowser("chrome")
+    .setChromeOptions(options)
+    .build();
+
+  // Navegar al dominio antes de interactuar con localStorage
+  await driver.get("http://localhost:4173");
+
+  // Persistir credenciales de sesión en el almacenamiento local
+  await driver.executeScript(`
+    localStorage.setItem("token", "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbGVqYWIyMzAyQGdtYWlsLmNvbSIsInJvbCI6IkFETUlOIiwiaWF0IjoxNzc3OTIxMTMzLCJleHAiOjE3NzgwMDc1MzN9.1nOLGHk1NPUViegqJHul6RJOKMBJnt3p-Qn6jsoyZlnGfoi4xHLKhAkfuA43eu6Y");
+  `);
+
+  // Recargar para que la app inicialice con el token activo
+  await driver.navigate().refresh();
+}
+
+/**
+ * Cierra el navegador al finalizar la suite.
+ * @async
+ */
+async function teardown() {
+  await driver.quit();
+}
+
+// ===========================================================================
+// CASOS DE PRUEBA
+// ===========================================================================
+
+/**
+ * TC-TID-01: Bloqueo de envío con campos vacíos.
+ * Verifica que el formulario no permita crear un registro
+ * cuando nombre y abreviatura están en blanco.
+ * @async
+ */
+async function testCrearTipoIdentificacionCamposVacios() {
+  await driver.get("http://localhost:4173/tipo-identificacion-form");
+
+  // Esperar que el formulario esté montado
+  await driver.wait(
+    until.elementLocated(By.css("[data-testid='tipoident-nombre-input']")),
+    10000,
+  );
+
+  const nombre = await driver.findElement(
+    By.css("[data-testid='tipoident-nombre-input']"),
+  );
+  const abrev = await driver.findElement(
+    By.css("[data-testid='tipoident-abreviatura-input']"),
+  );
+
+  // Limpiar explícitamente ambos campos
+  await nombre.clear();
+  await abrev.clear();
+
+  // Intentar enviar con todo vacío
+  await driver.findElement(By.css("[data-testid='tipoident-guardar-btn']")).click();
+
+  // Si aparece snackbar de éxito, la validación no está funcionando
+  let snackbarApareció = true;
+  try {
+    await driver.wait(
+      until.elementLocated(By.css("[data-testid='success-snackbar']")),
+      3000,
+    );
+  } catch (e) {
+    snackbarApareció = false;
+  }
+
+  if (snackbarApareció) {
+    throw new Error("❌ ERROR: se permitió crear con campos vacíos");
+  }
+
+  console.log("🚫 VALIDACIÓN OK: no se permitió crear vacío");
+
+  // Verificar si hay mensajes de error visibles en el DOM
+  const erroresNombre = await driver.findElements(
+    By.xpath("//*[contains(text(),'obligatorio')]"),
+  );
+
+  if (erroresNombre.length === 0) {
+    console.log("⚠️ No se detectaron mensajes visibles, pero validación bloqueó submit");
+  } else {
+    console.log("✅ Errores de validación visibles correctamente");
+  }
+}
+
+/**
+ * TC-TID-02: Creación de un tipo de identificación válido.
+ * Ingresa nombre y abreviatura, guarda y verifica
+ * el snackbar de confirmación.
+ * @async
+ */
+async function testCrearTipoIdentificacion() {
+  await driver.get("http://localhost:4173/tipo-identificacion-form");
+
+  // Esperar que los campos estén disponibles
+  await driver.wait(
+    until.elementLocated(By.css("[data-testid='tipoident-nombre-input']")),
+    10000,
+  );
+
+  const nombre = await driver.findElement(
+    By.css("[data-testid='tipoident-nombre-input']"),
+  );
+  await nombre.clear();
+  await nombre.sendKeys("TIPO SELENIUM CREATE");
+
+  const abrev = await driver.findElement(
+    By.css("[data-testid='tipoident-abreviatura-input']"),
+  );
+  await abrev.clear();
+  await abrev.sendKeys("TSC");
+
+  await driver.findElement(By.css("[data-testid='tipoident-guardar-btn']")).click();
+
+  // Esperar y leer el mensaje de éxito
+  const snackbar = await driver.wait(
+    until.elementLocated(By.css("[data-testid='success-snackbar']")),
+    10000,
+  );
+  const text = await snackbar.getText();
+  console.log("📩 SNACKBAR:", text);
+  console.log("🟢 CREATE OK");
+}
+
+/**
+ * TC-TID-03: Listado de tipos de identificación.
+ * Navega al tab correspondiente, cuenta las filas
+ * y lanza error si la tabla está vacía.
+ * @async
+ */
+async function testListarTipoIdentificacion() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  // Tab índice 3 corresponde a Tipo de Identificación
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[3].click();
+
+  const rows = await driver.wait(
+    until.elementsLocated(By.css("tbody tr")),
+    10000,
+  );
+  console.log(`📋 TIPOS EN TABLA: ${rows.length}`);
+
+  if (rows.length > 0) {
+    console.log("✅ LISTADO OK");
+  } else {
+    throw new Error("❌ No hay registros en la tabla");
+  }
+}
+
+/**
+ * TC-TID-04: Modificación de un tipo de identificación existente.
+ * Abre el primer registro en edición, cambia el nombre
+ * y confirma que el guardado se procesa.
+ * @async
+ */
+async function testActualizarTipoIdentificacion() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[3].click();
+
+  // Esperar y pulsar el primer botón de edición
+  const editBtn = await driver.wait(
+    until.elementLocated(By.css("[data-testid^='edit-btn-']")),
+    10000,
+  );
+  await editBtn.click();
+
+  // Esperar el formulario de edición
+  await driver.wait(
+    until.elementLocated(By.css("[data-testid='tipoident-nombre-input']")),
+    10000,
+  );
+
+  const nombre = await driver.findElement(
+    By.css("[data-testid='tipoident-nombre-input']"),
+  );
+  await nombre.clear();
+  await nombre.sendKeys("EDITADO SELENIUM");
+
+  await driver.findElement(By.css("[data-testid='tipoident-guardar-btn']")).click();
+
+  // Esperar posible alert de confirmación (si existe)
+  await driver.wait(until.alertIsPresent(), 5000).catch(() => {});
+
+  console.log("✏️ UPDATE EJECUTADO");
+}
+
+/**
+ * TC-TID-05: Eliminación de un tipo de identificación.
+ * Localiza el botón de borrado por índice, acepta
+ * la confirmación y verifica el conteo resultante.
+ * @async
+ */
+async function testEliminarTipoIdentificacion() {
+  await driver.get("http://localhost:4173/informacionEntidades");
+
+  const tabs = await driver.findElements(By.css(".MuiTab-root"));
+  await tabs[3].click();
+
+  // Registrar cuántas filas hay antes de borrar
+  const rows = await driver.wait(
+    until.elementsLocated(By.css("tbody tr")),
+    10000,
+  );
+  console.log(`📋 Filas antes delete: ${rows.length}`);
+
+  // Obtener todos los botones delete y usar el primero (índice 0)
+  const deleteButtons = await driver.findElements(
+    By.css("[data-testid^='delete-btn-']"),
+  );
+
+  if (!deleteButtons[0]) {
+    throw new Error("❌ No existe botón delete en ese índice");
+  }
+
+  await deleteButtons[0].click();
+
+  // Aceptar el confirm nativo del navegador
+  await driver.switchTo().alert().accept();
+
+  // Pausa para que la tabla se actualice tras la eliminación
+  await driver.sleep(1500);
+
+  const rowsAfter = await driver.findElements(By.css("tbody tr"));
+  console.log(`🗑 Filas después delete: ${rowsAfter.length}`);
+}
+
+// ===========================================================================
+// RUNNER
+// ===========================================================================
+
+/**
+ * Punto de entrada de la suite.
+ * Orden: validar vacíos → crear → listar → actualizar → eliminar.
+ */
+(async function run() {
+  await setup();
+
+  try {
+    console.log("==== INICIO TESTS TIPO IDENTIFICACIÓN ====");
+
+    await testCrearTipoIdentificacionCamposVacios();
+    await testCrearTipoIdentificacion();
+    await testListarTipoIdentificacion();
+    await testActualizarTipoIdentificacion();
+    await testEliminarTipoIdentificacion();
+
+    console.log("🎉 TODAS LAS PRUEBAS OK");
+  } catch (error) {
+    console.error("❌ ERROR EN SUITE:", error);
+  } finally {
+    await teardown();
+  }
+})();</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: layout/Menu.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: layout/Menu.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Stack,
+  ButtonBase,
+  Drawer,
+  List,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import DynamicFormOutlinedIcon from "@mui/icons-material/DynamicFormOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LocalFloristOutlinedIcon from "@mui/icons-material/LocalFloristOutlined";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
+
+/**
+ * @component Menu
+ * @description Layout principal con navegación en la barra superior.
+ */
+const Menu = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+
+  const menuItems = [
+    { text: t("menu.diagramaDB"),  path: "/diagrama", icon: &lt;AccountTreeOutlinedIcon fontSize="small" /> },
+    { text: t("menu.formularios"), path: "/formulariosBD",   icon: &lt;DynamicFormOutlinedIcon fontSize="small" /> },
+    { text: t("menu.entidades"),       path: "/informacionEntidades",    icon: &lt;TableChartOutlinedIcon fontSize="small" /> },
+    { text: t("menu.perfil"),      path: "/miPerfil",  icon: &lt;PersonOutlineIcon fontSize="small" /> },
+  ];
+
+  const NavItem = ({ item, onClick }) => {
+    const active = location.pathname === item.path;
+    return (
+      &lt;ButtonBase
+        onClick={() => {
+          navigate(item.path);
+          onClick?.();
+        }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.75,
+          px: 1.75,
+          py: 0.75,
+          borderRadius: 2,
+          fontFamily: "inherit",
+          fontSize: "0.85rem",
+          fontWeight: active ? 700 : 500,
+          color: active ? "#fff" : "rgba(255,255,255,0.7)",
+          background: active ? "rgba(255,255,255,0.18)" : "transparent",
+          transition: "all 0.2s",
+          whiteSpace: "nowrap",
+          "&amp;:hover": {
+            background: active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.1)",
+            color: "#fff",
+          },
+          "&amp; svg": {
+            color: active ? "#fff" : "rgba(255,255,255,0.6)",
+            fontSize: "1rem",
+          },
+        }}
+      >
+        {item.icon}
+        {item.text}
+        {active &amp;&amp; (
+          &lt;Box
+            sx={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: "#fff",
+              opacity: 0.85,
+              ml: 0.5,
+            }}
+          />
+        )}
+      &lt;/ButtonBase>
+    );
+  };
+
+  return (
+    &lt;Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {/* TOP NAV */}
+      &lt;AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
+          boxShadow: "0 2px 20px rgba(79,70,229,0.25)",
+          zIndex: 1300,
+        }}
+      >
+        &lt;Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+          {/* Logo + title */}
+          &lt;Stack direction="row" alignItems="center" gap={1.25} flexShrink={0}>
+            &lt;Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                background: "rgba(255,255,255,0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              &lt;LocalFloristOutlinedIcon sx={{ color: "#fff", fontSize: 18 }} />
+            &lt;/Box>
+            &lt;Typography
+              variant="subtitle1"
+              fontWeight={700}
+              color="#fff"
+              letterSpacing="-0.3px"
+              noWrap
+            >
+              {t("common.invernaderoTitulo")}
+            &lt;/Typography>
+          &lt;/Stack>
+
+          {/* Nav links — desktop */}
+          &lt;Stack
+            direction="row"
+            alignItems="center"
+            gap={0.5}
+            sx={{ display: { xs: "none", md: "flex" }, flexGrow: 1, ml: 3 }}
+          >
+            {menuItems.map((item) => (
+              &lt;NavItem key={item.path} item={item} />
+            ))}
+          &lt;/Stack>
+
+          {/* Right: language + hamburger */}
+          &lt;Stack direction="row" alignItems="center" gap={1.5} flexShrink={0}>
+            &lt;LanguageSwitcher />
+            &lt;IconButton
+              onClick={() => setMobileOpen(true)}
+              sx={{ display: { md: "none" }, color: "#fff" }}
+            >
+              &lt;MenuIcon />
+            &lt;/IconButton>
+          &lt;/Stack>
+        &lt;/Toolbar>
+      &lt;/AppBar>
+
+      {/* MOBILE DRAWER (slides from top) */}
+      &lt;Drawer
+        anchor="top"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        sx={{
+          display: { md: "none" },
+          "&amp; .MuiDrawer-paper": {
+            background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+            pt: 9,
+            pb: 2,
+            px: 2,
+          },
+        }}
+      >
+        &lt;List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          {menuItems.map((item) => (
+            &lt;NavItem
+              key={item.path}
+              item={item}
+              onClick={() => setMobileOpen(false)}
+            />
+          ))}
+        &lt;/List>
+      &lt;/Drawer>
+
+      {/* MAIN CONTENT */}
+      &lt;Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          mt: "64px",
+          minHeight: "calc(100vh - 64px)",
+          background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)",
+        }}
+      >
+        &lt;Outlet />
+      &lt;/Box>
+    &lt;/Box>
+  );
+};
+
+export default Menu;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

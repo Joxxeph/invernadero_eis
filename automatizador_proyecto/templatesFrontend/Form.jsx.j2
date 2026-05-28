@@ -1,0 +1,198 @@
+import React, { useEffect, useState } from "react";
+import { Formik, Form } from "formik";
+import * as Yup from "yup";
+import { TextField, Button, Box{% if form_fields | selectattr('is_select') | list %}, MenuItem{% endif %} } from "@mui/material";
+{% for imp in select_imports %}
+import { {{ imp.get_fn }} } from "{{ imp.api_module }}";
+{% endfor %}
+import { {{ api.create_fn }}, {{ api.update_fn }} } from "{{ api.api_module }}";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Snackbar, Alert } from "@mui/material";
+
+/**
+ * @file {{ pascal }}Form.jsx
+ * @description Formulario para la creación y actualización de {{ entity_name }}.
+ * Generado automáticamente el {{ date }}.
+ * @component
+ */
+const {{ pascal }}Form = () => {
+{% for imp in select_imports %}
+  const [{{ imp.state_name }}, set{{ imp.state_name | capitalize }}] = useState([]);
+{% endfor %}
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
+  const editData = location.state?.{{ camel }};
+
+  const schema = Yup.object({
+{% for v in yup_validations %}
+    {{ v.name }}: {{ v.chain }},
+{% endfor %}
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    navigate("/data");
+  };
+
+{% for imp in select_imports %}
+  useEffect(() => {
+    const fetch{{ imp.state_name | capitalize }} = async () => {
+      try {
+        const data = await {{ imp.get_fn }}();
+        set{{ imp.state_name | capitalize }}(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetch{{ imp.state_name | capitalize }}();
+  }, []);
+
+{% endfor %}
+  return (
+    <>
+      <Formik
+        initialValues={% raw %}{{{% endraw %}
+
+{% for iv in initial_values %}
+          {{ iv.name }}: editData?.{{ iv.name }} || {{ iv.default }},
+{% endfor %}
+        {% raw %}}}{% endraw %}
+
+        enableReinitialize
+        validationSchema={schema}
+        onSubmit={async (values, {% raw %}{{% endraw %} resetForm {% raw %}}{% endraw %}) => {
+          try {
+            const payload = {
+{% for iv in initial_values %}
+{% set field = form_fields | selectattr('name', 'equalto', iv.name) | first %}
+{% if field and (field.type == 'integer' or field.is_select) %}
+              {{ iv.name }}: Number(values.{{ iv.name }}),
+{% elif field and field.type == 'decimal' %}
+              {{ iv.name }}: Number(values.{{ iv.name }}),
+{% elif field and (field.type == 'date' or field.type == 'datetime') %}
+              {{ iv.name }}: values.{{ iv.name }} || null,
+{% else %}
+              {{ iv.name }}: values.{{ iv.name }},
+{% endif %}
+{% endfor %}
+            };
+
+            if (editData) {
+              await {{ api.update_fn }}(editData.id, payload);
+              setMessage(t("{{ entity_name }}.actualizado"));
+            } else {
+              await {{ api.create_fn }}(payload);
+              setMessage(t("{{ entity_name }}.creadoCorrecto"));
+            }
+
+            setOpen(true);
+            resetForm();
+          } catch (error) {
+            console.error(error);
+            setMessage(t("{{ entity_name }}.error"));
+            setOpen(true);
+          }
+        }}
+      >
+        {% raw %}{({{% endraw %}
+
+          values,
+          handleChange,
+          handleBlur,
+          errors,
+          touched,
+          submitCount,
+        }) => {
+          const showError = (field) =>
+            (touched[field] || submitCount > 0) && Boolean(errors[field]);
+          const showHelper = (field) =>
+            (touched[field] || submitCount > 0) && errors[field];
+
+          return (
+            <Form>
+              <Box display="flex" flexDirection="column" gap={2}>
+{% for field in form_fields %}
+{% if field.is_select %}
+                <TextField
+                  select
+                  name="{{ field.name }}"
+                  label={t("{{ field.t_key_label }}")}
+                  value={values.{{ field.name }}}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={showError("{{ field.name }}")}
+                  helperText={showHelper("{{ field.name }}")}
+                  fullWidth
+                  data-testid="{{ field.data_testid }}"
+                >
+{% for imp in select_imports %}
+{% if imp.local_field == field.name %}
+                  {% raw %}{{% endraw %}{{ imp.state_name }}.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.nombre}{item.apellido ? ` ${item.apellido}` : ""}{item.identificacion ? ` - ${item.identificacion}` : ""}
+                    </MenuItem>
+                  )){% raw %}}{% endraw %}
+
+{% endif %}
+{% endfor %}
+                </TextField>
+
+{% elif field.input_type == 'date' or field.input_type == 'datetime-local' %}
+                <TextField
+                  name="{{ field.name }}"
+                  label={t("{{ field.t_key_label }}")}
+                  type="{{ field.input_type }}"
+                  InputLabelProps={% raw %}{{{% endraw %} shrink: true {% raw %}}}{% endraw %}
+
+                  value={values.{{ field.name }}}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={showError("{{ field.name }}")}
+                  helperText={showHelper("{{ field.name }}")}
+                  fullWidth
+                  inputProps={% raw %}{{{% endraw %} "data-testid": "{{ field.data_testid }}" {% raw %}}}{% endraw %}
+
+                />
+
+{% else %}
+                <TextField
+                  name="{{ field.name }}"
+                  label={t("{{ field.t_key_label }}")}
+{% if field.input_type == 'number' %}
+                  type="number"
+{% endif %}
+                  value={values.{{ field.name }}}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={showError("{{ field.name }}")}
+                  helperText={showHelper("{{ field.name }}")}
+                  fullWidth
+                  inputProps={% raw %}{{{% endraw %} "data-testid": "{{ field.data_testid }}" {% raw %}}}{% endraw %}
+
+                />
+
+{% endif %}
+{% endfor %}
+                <Button type="submit" variant="contained" data-testid="{{ entity_name }}-guardar-btn">
+                  {editData ? t("common.actualizar") : t("{{ entity_name }}.guardar")}
+                </Button>
+              </Box>
+            </Form>
+          );
+        {% raw %}}}{% endraw %}
+
+      </Formik>
+      <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
+        <Alert severity="success" data-testid="success-snackbar" variant="filled">
+          {message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+};
+
+export default {{ pascal }}Form;

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/VerifyOTP.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/VerifyOTP.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-unused-vars */
+import React, { useState, useRef } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Alert,
+  Paper,
+  InputBase,
+} from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { useNavigate } from "react-router-dom";
+import { verifyOtpRequest } from "../api/authApi";
+import { useTranslation } from "react-i18next";
+import { saveToken } from "../utils/auth";
+
+/**
+ * @file VerifyOTP.jsx
+ * @description Página de verificación de código OTP.
+ */
+const OTP_LENGTH = 6;
+
+const VerifyOTP = () => {
+  const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
+  const [error, setError] = useState("");
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const inputsRef = useRef([]);
+
+  const handleChange = (index, value) => {
+    if (!/^\d?$/.test(value)) return;
+    const next = [...digits];
+    next[index] = value;
+    setDigits(next);
+    if (value &amp;&amp; index &lt; OTP_LENGTH - 1) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" &amp;&amp; !digits[index] &amp;&amp; index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((ch, i) => (next[i] = ch));
+    setDigits(next);
+    inputsRef.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const code = digits.join("");
+    if (code.length &lt; OTP_LENGTH) {
+      setError(t("otp.incorrecto"));
+      return;
+    }
+    try {
+      const data = { username: localStorage.getItem("username"), code };
+      const response = await verifyOtpRequest(data);
+      saveToken(response.token);
+      navigate("/mIPerfil");
+    } catch (err) {
+      setError(t("otp.incorrecto"));
+    }
+  };
+
+  return (
+    &lt;Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)",
+        px: 2,
+      }}
+    >
+      &lt;Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: 4,
+          p: { xs: 4, sm: 5 },
+          border: "1px solid",
+          borderColor: "grey.200",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
+          background: "#fff",
+        }}
+      >
+        {/* Icon */}
+        &lt;Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+          &lt;Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+            }}
+          >
+            &lt;LockOutlinedIcon sx={{ color: "#fff", fontSize: 26 }} />
+          &lt;/Box>
+        &lt;/Box>
+
+        {/* Title */}
+        &lt;Typography
+          variant="h5"
+          fontWeight={700}
+          textAlign="center"
+          color="grey.900"
+          letterSpacing="-0.5px"
+          mb={0.75}
+        >
+          {t("otp.verificar")}
+        &lt;/Typography>
+        {/* Error */}
+        {error &amp;&amp; (
+          &lt;Alert
+            severity="error"
+            sx={{ mb: 3, borderRadius: 2, fontSize: "0.8rem" }}
+            onClose={() => setError("")}
+          >
+            {error}
+          &lt;/Alert>
+        )}
+
+        {/* OTP boxes */}
+        &lt;Box
+          component="form"
+          onSubmit={handleVerifyOtp}
+          onPaste={handlePaste}
+        >
+          &lt;Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              justifyContent: "center",
+              mb: 4,
+            }}
+          >
+            {digits.map((digit, i) => (
+              &lt;Box
+                key={i}
+                sx={{
+                  width: 52,
+                  height: 60,
+                  borderRadius: 2,
+                  border: "2px solid",
+                  borderColor: digit ? "#4f46e5" : "grey.300",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "border-color 0.2s",
+                  "&amp;:focus-within": {
+                    borderColor: "#4f46e5",
+                    boxShadow: "0 0 0 3px rgba(79,70,229,0.15)",
+                  },
+                }}
+              >
+                &lt;InputBase
+                  inputRef={(el) => (inputsRef.current[i] = el)}
+                  value={digit}
+                  onChange={(e) => handleChange(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  inputProps={{
+                    maxLength: 1,
+                    style: {
+                      textAlign: "center",
+                      fontSize: "1.5rem",
+                      fontWeight: 700,
+                      color: "#1e1b4b",
+                      padding: 0,
+                      width: "100%",
+                    },
+                  }}
+                  sx={{ width: "100%" }}
+                />
+              &lt;/Box>
+            ))}
+          &lt;/Box>
+
+          &lt;Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{
+              py: 1.5,
+              borderRadius: 2.5,
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              textTransform: "none",
+              letterSpacing: 0.2,
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              boxShadow: "0 4px 16px rgba(79,70,229,0.35)",
+              "&amp;:hover": {
+                background: "linear-gradient(135deg, #4338ca, #6d28d9)",
+                boxShadow: "0 6px 20px rgba(79,70,229,0.45)",
+              },
+            }}
+          >
+            {t("otp.verficarCodigo")}
+          &lt;/Button>
+        &lt;/Box>
+
+        {/* Back link */}
+        &lt;Box sx={{ textAlign: "center", mt: 3 }}>
+          &lt;Typography
+            variant="body2"
+            color="grey.500"
+            sx={{
+              "&amp; span": {
+                color: "#4f46e5",
+                fontWeight: 600,
+                cursor: "pointer",
+                "&amp;:hover": { textDecoration: "underline" },
+              },
+            }}
+          >
+            ¿No recibiste el código?{" "}
+            &lt;span onClick={() => navigate("/login")}>Volver al inicio&lt;/span>
+          &lt;/Typography>
+        &lt;/Box>
+      &lt;/Paper>
+    &lt;/Box>
+  );
+};
+
+export default VerifyOTP;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

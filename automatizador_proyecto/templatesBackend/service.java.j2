@@ -1,0 +1,33 @@
+package {{ package }}.service;
+
+import org.springframework.stereotype.Service;
+import java.util.List;
+import {{ package }}.model.{{ class_name }};
+import {{ package }}.repository.{{ class_name }}Repository;
+
+/**
+ * Autor: {{ author }}
+ * Fecha: {{ date }}
+ * Propósito: Lógica de negocio para {{ class_name }}
+ */
+@Service
+public class {{ class_name }}Service {
+
+    private final {{ class_name }}Repository repo;
+
+    public {{ class_name }}Service({{ class_name }}Repository repo) {
+        this.repo = repo;
+    }
+
+    public List<{{ class_name }}> findAll() {
+        return repo.findAll();
+    }
+
+    public {{ class_name }} save({{ class_name }} entity) {
+        return repo.save(entity);
+    }
+
+    public void delete(Long id) {
+        repo.deleteById(id);
+    }
+}

@@ -1,0 +1,12 @@
+package {{ package }}.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import {{ package }}.model.{{ class_name }};
+
+/**
+ * Autor: {{ author }}
+ * Fecha: {{ date }}
+ * Propósito: Repositorio de {{ class_name }} para acceso a datos
+ */
+public interface {{ class_name }}Repository extends JpaRepository<{{ class_name }}, Long> {
+}

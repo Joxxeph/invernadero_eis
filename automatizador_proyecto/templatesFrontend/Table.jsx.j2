@@ -1,0 +1,97 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { useEffect, useState } from "react";
+import GenericTable from "./GenericTable";
+import { {{ api.get_fn }}, {{ api.delete_fn }} } from "{{ api.api_module }}";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+
+/**
+ * @file {{ pascal }}Table.jsx
+ * @description Componente de tabla para {{ entity_name }}.
+ * Muestra el listado con opciones de editar y eliminar.
+ * Generado automáticamente el {{ date }}.
+ *
+ * @component
+ * @returns {JSX.Element} Tabla con datos de {{ entity_name }}.
+ */
+const {{ pascal }}Table = () => {
+  /**
+   * Estado que almacena la lista de {{ entity_name }}s
+   * @type {Array<Object>}
+   */
+  const [data, setData] = useState([]);
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  /**
+   * Obtiene la lista de {{ entity_name }}s desde el backend
+   * @async
+   */
+  const fetchData = async () => {
+    try {
+      const res = await {{ api.get_fn }}();
+      setData(res);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  /**
+   * Elimina un {{ entity_name }} después de confirmación del usuario
+   * @param {number} id - ID del {{ entity_name }}
+   */
+  const handleDelete = async (id) => {
+    const confirmar = window.confirm(t("common.eliminarConfirm"));
+    if (!confirmar) return;
+
+    try {
+      await {{ api.delete_fn }}(id);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      alert(t("{{ entity_name }}.errorDelete"));
+    }
+  };
+
+  /**
+   * Redirige al formulario de edición con los datos del {{ entity_name }} seleccionado
+   * @param {Object} row - Fila seleccionada
+   */
+  const handleEdit = (row) => {
+    navigate("/{{ kebab }}-form", {
+      state: {
+        {{ camel }}: row,
+      },
+    });
+  };
+
+  /**
+   * Definición de columnas de la tabla
+   * @type {Array<Object>}
+   */
+  const columns = [
+{% for col in columns %}
+{% if col.t_key %}
+    { field: "{{ col.field }}", label: t("{{ col.t_key }}") },
+{% else %}
+    { field: "{{ col.field }}", label: "{{ col.label }}" },
+{% endif %}
+{% endfor %}
+  ];
+
+  return (
+    <GenericTable
+      title={t("{{ entity_name }}.list")}
+      columns={columns}
+      rows={data}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+    />
+  );
+};
+
+export default {{ pascal }}Table;

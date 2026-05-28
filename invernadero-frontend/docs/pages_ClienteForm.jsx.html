@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/ClienteForm.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/ClienteForm.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useEffect, useState } from "react";
+import { Formik, Form } from "formik";
+import * as Yup from "yup";
+import {
+  TextField,
+  Button,
+  Box,
+  MenuItem,
+  Typography,
+  Paper,
+  Divider,
+  InputAdornment,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import PersonSearchOutlinedIcon from "@mui/icons-material/PersonSearchOutlined";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
+import PercentOutlinedIcon from "@mui/icons-material/PercentOutlined";
+import RepeatOutlinedIcon from "@mui/icons-material/RepeatOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { getPersona } from "../api/personaApi";
+import { createCliente, updateCliente } from "../api/clienteApi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+
+// Estilos reutilizables para los campos del formulario
+// Se definen aquí para no repetir código en cada TextField
+const fieldSx = {
+  "&amp; .MuiOutlinedInput-root": {
+    borderRadius: 2,
+    background: "#fafafa",
+    transition: "box-shadow 0.2s",
+    "&amp;:hover fieldset": { borderColor: "#7c3aed" },
+    "&amp;.Mui-focused fieldset": { borderColor: "#4f46e5" },
+    "&amp;.Mui-focused": { boxShadow: "0 0 0 3px rgba(79,70,229,0.1)" },
+  },
+  "&amp; .MuiInputLabel-root.Mui-focused": { color: "#4f46e5" },
+};
+
+/**
+ * Formulario de registro/edición de clientes.
+ *
+ * Permite vincular una persona existente con datos comerciales:
+ * categoría, descuento, frecuencia de compra y última fecha de compra.
+ *
+ * @author dvillamizar
+ * @version 1.2.0
+ */
+const ClienteForm = () => {
+  // Lista de personas obtenidas del backend para el selector
+  const [personas, setPersonas] = useState([]);
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
+
+  // Si venimos de la tabla de datos con state, estamos en modo edición
+  const editData = location.state?.cliente;
+
+  // Reglas de validación con Yup
+  const schema = Yup.object({
+    id_persona: Yup.number()
+      .typeError(t("cliente.personaObligatoria"))
+      .required(t("cliente.personaObligatoria")),
+    categoria: Yup.string().required(t("cliente.categoriaObligatoria")),
+    descuento: Yup.number()
+      .typeError(t("cliente.debeSerNumero"))
+      .required(t("cliente.descuentoObligatorio"))
+      .min(0, t("cliente.descuentoRango"))
+      .max(100, t("cliente.descuentoRango")),
+    frecuencia_compra: Yup.string().required(t("cliente.frecuenciaObligatoria")),
+    fecha_ultima_compra: Yup.date().nullable(),
+  });
+
+  // Cierra el snackbar y redirige al listado de datos
+  const handleClose = () => {
+    setOpen(false);
+    navigate("/informacionEntidades");
+  };
+
+  // Carga inicial de personas registradas en el sistema
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        const data = await getPersona();
+        setPersonas(data);
+      } catch (err) {
+        console.error("Error al cargar personas:", err);
+      }
+    };
+    fetchPersonas();
+  }, []);
+
+  return (
+    &lt;>
+      {/* Contenedor principal del formulario */}
+      &lt;Box sx={{ maxWidth: 600, mx: "auto" }}>
+        {/* Encabezado de sección */}
+        &lt;Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+          &lt;Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(79,70,229,0.3)",
+              flexShrink: 0,
+            }}
+          >
+            &lt;PersonSearchOutlinedIcon sx={{ color: "#fff", fontSize: 20 }} />
+          &lt;/Box>
+          &lt;Box>
+            &lt;Typography variant="h6" fontWeight={700} color="grey.900" letterSpacing="-0.3px">
+              {editData ? t("common.actualizar") : t("cliente.guardar")}
+            &lt;/Typography>
+          &lt;/Box>
+        &lt;/Box>
+
+        &lt;Paper
+          elevation={0}
+          sx={{
+            border: "1px solid #e0e7ff",
+            borderRadius: 3,
+            boxShadow: "0 4px 24px rgba(79,70,229,0.08)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Franja superior decorativa */}
+          &lt;Box
+            sx={{
+              height: 4,
+              background: "linear-gradient(90deg, #4f46e5, #7c3aed)",
+            }}
+          />
+
+          &lt;Box sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+            &lt;Formik
+              initialValues={{
+                id_persona: editData?.id_persona || "",
+                categoria: editData?.categoria || "",
+                descuento: editData?.descuento || "",
+                frecuencia_compra: editData?.frecuencia_compra || "",
+                fecha_ultima_compra: editData?.fecha_ultima_compra || "",
+              }}
+              enableReinitialize
+              validationSchema={schema}
+              onSubmit={async (values, { resetForm }) => {
+                try {
+                  const payload = {
+                    id_persona: Number(values.id_persona),
+                    categoria: values.categoria,
+                    descuento: Number(values.descuento),
+                    frecuencia_compra: values.frecuencia_compra,
+                    fecha_ultima_compra: values.fecha_ultima_compra || null,
+                  };
+
+                  if (editData) {
+                    await updateCliente(editData.id, payload);
+                    setMessage(t("cliente.clienteActualizado"));
+                  } else {
+                    await createCliente(payload);
+                    setMessage(t("cliente.clienteCorrecto"));
+                  }
+
+                  setOpen(true);
+                  resetForm();
+                } catch (err) {
+                  console.error("Error al guardar cliente:", err);
+                  setMessage(t("cliente.clienteError"));
+                  setOpen(true);
+                }
+              }}
+            >
+              {({ values, handleChange, handleBlur, errors, touched, submitCount }) => {
+                // Helpers para mostrar errores solo tras interacción o submit
+                const showError = (f) => (touched[f] || submitCount > 0) &amp;&amp; Boolean(errors[f]);
+                const showHelper = (f) => (touched[f] || submitCount > 0) &amp;&amp; errors[f];
+
+                return (
+                  &lt;Form>
+                    &lt;Box display="flex" flexDirection="column" gap={2.5}>
+
+                      {/* Sección: Persona vinculada */}
+                      &lt;Box>
+                        &lt;Typography
+                          variant="caption"
+                          fontWeight={700}
+                          color="#4f46e5"
+                          textTransform="uppercase"
+                          letterSpacing={0.8}
+                          display="block"
+                          mb={1}
+                        >
+                          {t("cliente.personaAsociada")}
+                        &lt;/Typography>
+                        &lt;TextField
+                          select
+                          name="id_persona"
+                          label={t("cliente.personaAsociada")}
+                          value={values.id_persona}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={showError("id_persona")}
+                          helperText={showHelper("id_persona")}
+                          fullWidth
+                          data-testid="cliente-persona-input"
+                          InputProps={{
+                            startAdornment: (
+                              &lt;InputAdornment position="start">
+                                &lt;PersonSearchOutlinedIcon sx={{ color: "#a5b4fc", fontSize: 18 }} />
+                              &lt;/InputAdornment>
+                            ),
+                          }}
+                          sx={fieldSx}
+                        >
+                          {personas.map((persona) => (
+                            &lt;MenuItem key={persona.id} value={persona.id}>
+                              {persona.nombre} {persona.apellido} — {persona.identificacion}
+                            &lt;/MenuItem>
+                          ))}
+                        &lt;/TextField>
+                      &lt;/Box>
+
+                      &lt;Divider sx={{ borderColor: "#f0f0f8" }} />
+
+
+                      {/* Categoría y Descuento en fila */}
+                      &lt;Box sx={{ display: "flex", gap: 2 }}>
+                        &lt;TextField
+                          name="categoria"
+                          label={t("cliente.categoria")}
+                          value={values.categoria}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={showError("categoria")}
+                          helperText={showHelper("categoria")}
+                          fullWidth
+                          inputProps={{ "data-testid": "cliente-categoria-input" }}
+                          InputProps={{
+                            startAdornment: (
+                              &lt;InputAdornment position="start">
+                                &lt;LocalOfferOutlinedIcon sx={{ color: "#a5b4fc", fontSize: 18 }} />
+                              &lt;/InputAdornment>
+                            ),
+                          }}
+                          sx={fieldSx}
+                        />
+                        &lt;TextField
+                          name="descuento"
+                          label={t("cliente.descuento")}
+                          type="number"
+                          value={values.descuento}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={showError("descuento")}
+                          helperText={showHelper("descuento")}
+                          inputProps={{ "data-testid": "cliente-descuento-input", min: 0, max: 100 }}
+                          InputProps={{
+                            startAdornment: (
+                              &lt;InputAdornment position="start">
+                                &lt;PercentOutlinedIcon sx={{ color: "#a5b4fc", fontSize: 18 }} />
+                              &lt;/InputAdornment>
+                            ),
+                          }}
+                          sx={{ ...fieldSx, width: "45%" }}
+                        />
+                      &lt;/Box>
+
+                      {/* Frecuencia de compra */}
+                      &lt;TextField
+                        name="frecuencia_compra"
+                        label={t("cliente.frecuenciaCompra")}
+                        value={values.frecuencia_compra}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={showError("frecuencia_compra")}
+                        helperText={showHelper("frecuencia_compra")}
+                        fullWidth
+                        inputProps={{ "data-testid": "cliente-frecuencia-input" }}
+                        InputProps={{
+                          startAdornment: (
+                            &lt;InputAdornment position="start">
+                              &lt;RepeatOutlinedIcon sx={{ color: "#a5b4fc", fontSize: 18 }} />
+                            &lt;/InputAdornment>
+                          ),
+                        }}
+                        sx={fieldSx}
+                      />
+
+                      {/* Fecha última compra */}
+                      &lt;TextField
+                        name="fecha_ultima_compra"
+                        label={t("cliente.fechaUltimaCompra")}
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={values.fecha_ultima_compra}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={showError("fecha_ultima_compra")}
+                        helperText={showHelper("fecha_ultima_compra")}
+                        fullWidth
+                        inputProps={{ "data-testid": "cliente-fechaCompra-input" }}
+                        InputProps={{
+                          startAdornment: (
+                            &lt;InputAdornment position="start">
+                              &lt;CalendarTodayOutlinedIcon sx={{ color: "#a5b4fc", fontSize: 18 }} />
+                            &lt;/InputAdornment>
+                          ),
+                        }}
+                        sx={fieldSx}
+                      />
+
+                      {/* Botón de acción */}
+                      &lt;Button
+                        type="submit"
+                        variant="contained"
+                        size="large"
+                        data-testid="cliente-guardar-btn"
+                        startIcon={editData ? &lt;EditOutlinedIcon /> : &lt;SaveOutlinedIcon />}
+                        sx={{
+                          mt: 1,
+                          py: 1.4,
+                          borderRadius: 2.5,
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                          textTransform: "none",
+                          letterSpacing: 0.3,
+                          background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                          boxShadow: "0 4px 16px rgba(79,70,229,0.35)",
+                          "&amp;:hover": {
+                            background: "linear-gradient(135deg, #4338ca, #6d28d9)",
+                            boxShadow: "0 6px 20px rgba(79,70,229,0.45)",
+                          },
+                        }}
+                      >
+                        {editData ? t("common.actualizar") : t("cliente.guardar")}
+                      &lt;/Button>
+                    &lt;/Box>
+                  &lt;/Form>
+                );
+              }}
+            &lt;/Formik>
+          &lt;/Box>
+        &lt;/Paper>
+      &lt;/Box>
+
+      {/* Notificación de resultado */}
+      &lt;Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
+        &lt;Alert
+          severity="success"
+          variant="filled"
+          data-testid="success-snackbar"
+          sx={{ borderRadius: 2, fontWeight: 600 }}
+        >
+          {message}
+        &lt;/Alert>
+      &lt;/Snackbar>
+    &lt;/>
+  );
+};
+
+export default ClienteForm;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#BaseTable">BaseTable</a></li><li><a href="global.html#ClienteForm">ClienteForm</a></li><li><a href="global.html#ClienteTable">ClienteTable</a></li><li><a href="global.html#CultivoForm">CultivoForm</a></li><li><a href="global.html#CultivoTable">CultivoTable</a></li><li><a href="global.html#GenericTable">GenericTable</a></li><li><a href="global.html#Menu">Menu</a></li><li><a href="global.html#PersonaForm">PersonaForm</a></li><li><a href="global.html#PersonaTable">PersonaTable</a></li><li><a href="global.html#PrivateRoute">PrivateRoute</a></li><li><a href="global.html#ProductoTable">ProductoTable</a></li><li><a href="global.html#SectionLabel">SectionLabel</a></li><li><a href="global.html#TipoCultivoTable">TipoCultivoTable</a></li><li><a href="global.html#TipoIdentificacionTable">TipoIdentificacionTable</a></li><li><a href="global.html#createCliente">createCliente</a></li><li><a href="global.html#createCultivo">createCultivo</a></li><li><a href="global.html#createPersona">createPersona</a></li><li><a href="global.html#createProducto">createProducto</a></li><li><a href="global.html#createTipoCultivo">createTipoCultivo</a></li><li><a href="global.html#createTipoIdentificacion">createTipoIdentificacion</a></li><li><a href="global.html#deleteCliente">deleteCliente</a></li><li><a href="global.html#deleteCultivo">deleteCultivo</a></li><li><a href="global.html#deletePersona">deletePersona</a></li><li><a href="global.html#deleteProducto">deleteProducto</a></li><li><a href="global.html#deleteTipoCultivo">deleteTipoCultivo</a></li><li><a href="global.html#deleteTipoIdentificacion">deleteTipoIdentificacion</a></li><li><a href="global.html#fieldSx">fieldSx</a></li><li><a href="global.html#getCliente">getCliente</a></li><li><a href="global.html#getCultivo">getCultivo</a></li><li><a href="global.html#getDiagram">getDiagram</a></li><li><a href="global.html#getPersona">getPersona</a></li><li><a href="global.html#getProducto">getProducto</a></li><li><a href="global.html#getTipoCultivo">getTipoCultivo</a></li><li><a href="global.html#getTipoIdentificacion">getTipoIdentificacion</a></li><li><a href="global.html#getToken">getToken</a></li><li><a href="global.html#getTypeStyle">getTypeStyle</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getUsername">getUsername</a></li><li><a href="global.html#isAuthenticated">isAuthenticated</a></li><li><a href="global.html#loginRequest">loginRequest</a></li><li><a href="global.html#logoutRequest">logoutRequest</a></li><li><a href="global.html#perfilRequest">perfilRequest</a></li><li><a href="global.html#removeToken">removeToken</a></li><li><a href="global.html#saveToken">saveToken</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#teardown">teardown</a></li><li><a href="global.html#testActualizarCliente">testActualizarCliente</a></li><li><a href="global.html#testActualizarCultivo">testActualizarCultivo</a></li><li><a href="global.html#testActualizarPersona">testActualizarPersona</a></li><li><a href="global.html#testActualizarProducto">testActualizarProducto</a></li><li><a href="global.html#testActualizarTipoCultivo">testActualizarTipoCultivo</a></li><li><a href="global.html#testActualizarTipoIdentificacion">testActualizarTipoIdentificacion</a></li><li><a href="global.html#testCrearCliente">testCrearCliente</a></li><li><a href="global.html#testCrearClienteCamposVacios">testCrearClienteCamposVacios</a></li><li><a href="global.html#testCrearCultivo">testCrearCultivo</a></li><li><a href="global.html#testCrearCultivoCamposVacios">testCrearCultivoCamposVacios</a></li><li><a href="global.html#testCrearPersona">testCrearPersona</a></li><li><a href="global.html#testCrearPersonaCamposVacios">testCrearPersonaCamposVacios</a></li><li><a href="global.html#testCrearProducto">testCrearProducto</a></li><li><a href="global.html#testCrearProductoCamposVacios">testCrearProductoCamposVacios</a></li><li><a href="global.html#testCrearTipoCultivo">testCrearTipoCultivo</a></li><li><a href="global.html#testCrearTipoCultivoVacio">testCrearTipoCultivoVacio</a></li><li><a href="global.html#testCrearTipoIdentificacion">testCrearTipoIdentificacion</a></li><li><a href="global.html#testCrearTipoIdentificacionCamposVacios">testCrearTipoIdentificacionCamposVacios</a></li><li><a href="global.html#testEliminarCliente">testEliminarCliente</a></li><li><a href="global.html#testEliminarCultivo">testEliminarCultivo</a></li><li><a href="global.html#testEliminarPersona">testEliminarPersona</a></li><li><a href="global.html#testEliminarProducto">testEliminarProducto</a></li><li><a href="global.html#testEliminarTipoCultivo">testEliminarTipoCultivo</a></li><li><a href="global.html#testEliminarTipoIdentificacion">testEliminarTipoIdentificacion</a></li><li><a href="global.html#testListarCliente">testListarCliente</a></li><li><a href="global.html#testListarCultivo">testListarCultivo</a></li><li><a href="global.html#testListarPersona">testListarPersona</a></li><li><a href="global.html#testListarProducto">testListarProducto</a></li><li><a href="global.html#testListarTipoCultivo">testListarTipoCultivo</a></li><li><a href="global.html#testListarTipoIdentificacion">testListarTipoIdentificacion</a></li><li><a href="global.html#updateCliente">updateCliente</a></li><li><a href="global.html#updateCultivo">updateCultivo</a></li><li><a href="global.html#updatePersona">updatePersona</a></li><li><a href="global.html#updateProducto">updateProducto</a></li><li><a href="global.html#updateTipoCultivo">updateTipoCultivo</a></li><li><a href="global.html#updateTipoIdentificacion">updateTipoIdentificacion</a></li><li><a href="global.html#verifyOtpRequest">verifyOtpRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu May 28 2026 03:35:58 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
