@@ -39,7 +39,7 @@ jobs:
 
   frontend-testing:
     runs-on: ubuntu-latest
-    needs: [backend-tests]  
+    needs: [backend-testing]  
 
     services:
       postgres:
@@ -116,8 +116,8 @@ jobs:
   
   notify-taiga:
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
-    if: always() && (needs.backend-tests.result == 'failure' || needs.frontend-tests.result == 'failure')
+    needs: [backend-testing, frontend-testing]
+    if: always() && (needs.backend-testing.result == 'failure' || needs.frontend-testing.result == 'failure')
  
     steps:
       - name: Install dependencies (jq)
