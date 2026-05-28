@@ -144,17 +144,23 @@ jobs:
 
           echo "TAIGA_TOKEN=$TOKEN" >> $GITHUB_ENV
       - name: Create Automated Bug in Taiga
+        env:
+          PROJECT_ID: ${{ secrets.TAIGA_PROJECT_ID }}
+          STATUS_ID: ${{ secrets.TAIGA_STATUS_ID }}
+          TYPE_ID: ${{ secrets.TAIGA_TYPE_ID }}
+          PRIORITY_ID: ${{ secrets.TAIGA_PRIORITY_ID }}
+          SEVERITY_ID: ${{ secrets.TAIGA_SEVERITY_ID }}
         run: |
-          curl -v -X POST "https://api.taiga.io/api/v1/issues" \
+          curl --fail -X POST "https://api.taiga.io/api/v1/issues" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer $TAIGA_TOKEN" \
-          -d '{
-            "project": '${{ secrets.TAIGA_PROJECT_ID }}',
-            "status": '${{ secrets.TAIGA_STATUS_ID }}',
-            "type": '${{ secrets.TAIGA_TYPE_ID }}',
-            "priority": '${{ secrets.TAIGA_PRIORITY_ID }}',
-            "severity": '${{ secrets.TAIGA_SEVERITY_ID }}',
-            "subject": "CI FAILED - Pruebas fallidas",
-            "description": "Automated CI/CD bug detected.",
-            "tags": ["github-actions","ci-cd","automated-bug"]
-          }' || true
+          -d "{
+            \"project\": $PROJECT_ID,
+            \"status\": $STATUS_ID,
+            \"type\": $TYPE_ID,
+            \"priority\": $PRIORITY_ID,
+            \"severity\": $SEVERITY_ID,
+            \"subject\": \"CI FAILED - Pruebas fallidas\",
+            \"description\": \"Automated CI/CD bug detected.\",
+            \"tags\": [\"github-actions\",\"ci-cd\",\"automated-bug\"]
+          }"
