@@ -130,7 +130,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "type": "normal",
-              "username": "${{ secrets.TAIGA_USERNAME }}",
+              "username": "JOGUMA",
               "password": "Joseph.0603"
             }')
 
