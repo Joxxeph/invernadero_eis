@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Propósito: Testeador de la aplicación
  */
 @ActiveProfiles("test")
-@SpringBootTest
+@SpringBootTest 
 class InvernaderoApplicationTests {
 
 	@Test
