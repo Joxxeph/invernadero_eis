@@ -48,6 +48,8 @@ async function setup() {
 /**
  * Cierra el navegador al finalizar la suite.
  * @async
+ * 
+ * 
  */
 async function teardown() {
   await driver.quit();
