@@ -159,7 +159,7 @@ async function testListarTipoCultivo() {
   console.log(`📋 TIPOS CULTIVO: ${rows.length}`);
 
   if (rows.length === 0) {
-    throw new Error("❌ No hay registros de tipo cultivo");
+    throw new Error("❌ No  hay registros de tipo cultivo");
   }
   console.log("✅ LISTADO OK");
 }
