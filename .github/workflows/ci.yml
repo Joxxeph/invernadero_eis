@@ -122,17 +122,12 @@ jobs:
     steps:
       - name: Install dependencies (jq)
         run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Get Taiga Auth Token
         id: taiga_auth
         run: |
           RESPONSE=$(curl -s -X POST "https://api.taiga.io/api/v1/auth" \
             -H "Content-Type: application/json" \
-            -d '{
-              "type": "normal",
-              "username": "JOGUMA",
-              "password": "Joseph.0603"
-            }')
+            -d '{"type": "normal", "username": "JOGUMA", "password": "Joseph.0603"}')
 
           TOKEN=$(echo $RESPONSE | jq -r '.auth_token')
 
